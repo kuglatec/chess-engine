@@ -10,18 +10,6 @@ int main() {
     move.pieceID = 12;
     printf("%d", mValid(move, ps));
   //mValid(move, ps);
-  for (int p = 0; p < 32; p++){
-  for (int i = 0; i < 8; i++) {
-    for (int j = 0; j < 8; j++) {
-    move.startX = ps[p].xpos;
-    move.startY = ps[p].ypos;
-    move.destX = i;
-    move.destY = j;
-    move.pieceID = p;
-    printf("%d", mValid(move, ps));
-    }
-  }
-  }
     
     return 0;
 }
