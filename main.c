@@ -8,7 +8,7 @@ int main() {
     move.destX = 3;
     move.destY = 1;
     move.pieceID = 12;
-    printf("%d", mValid(move, ps));
+    printf("%d", mValid(move, ps, 0));
   //mValid(move, ps);
     
     return 0;
