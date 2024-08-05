@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include "structs.h"
 
-int wchecker(int i, struct Square* sqs, struct Piece* ps, struct Move m) {
+int wchecker(int i, struct Square* sqs, struct Piece* ps, struct Move m, int player, int opponent) {
     int p;
 
     for (int j = 0; j <= i; j++) {
@@ -10,7 +10,7 @@ int wchecker(int i, struct Square* sqs, struct Piece* ps, struct Move m) {
             for (p = 0; p < 32; p++) {
                // printf("\n%d\n", p);
                 if (ps[p].xpos == sqs[j].x && ps[p].ypos == sqs[j].y && ps[p].captured == 0) {
-                     if ((ps[p].ypos != m.destY && ps[p].xpos != m.destX) || ((ps[p].xpos == m.destX && ps[p].ypos == m.destY) && ps[p].owner == 0)) {
+                     if ((ps[p].ypos != m.destY && ps[p].xpos != m.destX) || ((ps[p].xpos == m.destX && ps[p].ypos == m.destY) && ps[p].owner == player)) {
                             return 0; 
                         }
                 }
@@ -20,13 +20,13 @@ int wchecker(int i, struct Square* sqs, struct Piece* ps, struct Move m) {
     return 1;
 }
 
-int ywchecker(int i, int j, int *sqs, struct Piece* ps, struct Move m){ /*function for checking if the piece is blocked when moving on the y axis*/
+int ywchecker(int i, int j, int *sqs, struct Piece* ps, struct Move m, int player, int opponent){ /*function for checking if the piece is blocked when moving on the y axis*/
     int p;
     for (i = 0; i <= j; i++) {
                 if (sqs[i] != m.startY) {
                     for (p = 0; p < 32; p++) {
                         if (ps[p].captured == 0 && ps[p].xpos == m.startX) {
-                                if (sqs[i] == ps[p].ypos && (ps[p].ypos != m.destY || (ps[p].ypos == m.destY && ps[p].owner == 0))) {
+                                if (sqs[i] == ps[p].ypos && (ps[p].ypos != m.destY || (ps[p].ypos == m.destY && ps[p].owner == player))) {
                                     return 0; /*some piece is blocking*/
                                 }
                     
@@ -35,13 +35,13 @@ int ywchecker(int i, int j, int *sqs, struct Piece* ps, struct Move m){ /*functi
             return 1; /* no blockers*/
 }
 
-int xwchecker(int i, int j, int *sqs, struct Piece* ps, struct Move m){ /*function for checking if the piece is blocked when moving on the y axis*/
+int xwchecker(int i, int j, int *sqs, struct Piece* ps, struct Move m, int player, int opponent){ /*function for checking if the piece is blocked when moving on the y axis*/
     int p;
     for (i = 0; i <= j; i++) {
                 if (sqs[i] != m.startX) {
                     for (p = 0; p < 32; p++) {
                         if (ps[p].captured == 0 && ps[p].ypos == m.startY) {
-                                if (sqs[i] == ps[p].xpos && (ps[p].xpos != m.destX || (ps[p].xpos == m.destX && ps[p].owner == 0))) {
+                                if (sqs[i] == ps[p].xpos && (ps[p].xpos != m.destX || (ps[p].xpos == m.destX && ps[p].owner == player))) {
                                     return 0; /*some piece is blocking*/
                                 }
                     
@@ -51,9 +51,9 @@ int xwchecker(int i, int j, int *sqs, struct Piece* ps, struct Move m){ /*functi
 }
 
 
-int queenValid(struct Move m, struct Piece* ps) {
+int queenValid(struct Move m, struct Piece* ps, int player, int opponent) {
     /*if piece is captured, controlled by opponent or doesnt move, abort*/
-    if ((m.startY == m.destY && m.startX == m.destX) || ps[m.pieceID].captured == 1 || ps[m.pieceID].owner == 1) {
+    if ((m.startY == m.destY && m.startX == m.destX) || ps[m.pieceID].captured == 1 || ps[m.pieceID].owner == opponent) {
         return 0;
     }
     int dr; /*direction where the rook is moving (0=up, 1=down, 2=right, 3=left, 4=right-up, 5=right-down, 6=left-up, 7=left-down)*/
@@ -86,7 +86,7 @@ int queenValid(struct Move m, struct Piece* ps) {
             //printf("\nJ: %d\n", j);
             sqs[j] = m.destY;
 
-            return ywchecker(i, j, sqs, ps, m);
+            return ywchecker(i, j, sqs, ps, m, player, opponent);
         }
         case 1: {
             int sqs[m.startY - m.destY]; /*initialite array of squares the piece is passing*/
@@ -96,7 +96,7 @@ int queenValid(struct Move m, struct Piece* ps) {
                 j++;
             }
             sqs[j] = m.destY;
-            return ywchecker(i, j, sqs, ps, m);
+            return ywchecker(i, j, sqs, ps, m, player, opponent);
         }
 
         case 2: {
@@ -108,7 +108,7 @@ int queenValid(struct Move m, struct Piece* ps) {
                 j++;
             }
             sqs[j] = m.destX;
-            return xwchecker(i, j, sqs, ps, m);
+            return xwchecker(i, j, sqs, ps, m, player, opponent);
         }
         case 3: {
             int sqs[m.startX - m.destX]; /*initialite array of squares the piece is passing*/
@@ -119,7 +119,7 @@ int queenValid(struct Move m, struct Piece* ps) {
                 j++;
             }
             sqs[j] = m.destX;
-            return xwchecker(i, j, sqs, ps, m);
+            return xwchecker(i, j, sqs, ps, m, player, opponent);
         }
 
     }
@@ -133,7 +133,7 @@ int queenValid(struct Move m, struct Piece* ps) {
                    sqs[i].y =  m.startY + (s - m.startX);
                    i++;
             }
-            return wchecker(i, sqs, ps, m);
+            return wchecker(i, sqs, ps, m, player, opponent);
         }
         else if (m.destX > m.startX && m.destY < m.startY) { /*piece moves right down*/
             struct Square sqs[m.destX - m.startX]; /*allocate array of squares each holding an x and y value*/ 
@@ -142,7 +142,7 @@ int queenValid(struct Move m, struct Piece* ps) {
                    sqs[i].y =  m.startY - (s - m.startX);
                    i++;
             }
-            return wchecker(i, sqs, ps, m);
+            return wchecker(i, sqs, ps, m, player, opponent);
         }
         else if (m.destX < m.startX && m.destY > m.startY) { /*piece moves left up*/
             struct Square sqs[m.startX - m.destX]; /*allocate memory*/
@@ -151,7 +151,7 @@ int queenValid(struct Move m, struct Piece* ps) {
                 sqs[i].x =  m.startX - (s - m.startY);
                 i++;
             }
-            return wchecker(i, sqs, ps, m);
+            return wchecker(i, sqs, ps, m, player, opponent);
         
         }
         else if (m.destX < m.startX && m.destY < m.startY) { /*piece moves left down*/
@@ -164,16 +164,16 @@ int queenValid(struct Move m, struct Piece* ps) {
                 printf("\nX: %d\n", sqs[i].x);
                 i++;
             }
-          return wchecker(i, sqs, ps, m); 
+          return wchecker(i, sqs, ps, m, player, opponent); 
       }  
     } 
     return 0;
 }
 
-int pawnValid(struct Move m, struct Piece* ps) {
+int pawnValid(struct Move m, struct Piece* ps, int player, int opponent) {
     
     /*if piece is captured, controlled by opponent or doesnt move, abort*/
-    if (m.startY == m.destY || ps[m.pieceID].captured == 1 || ps[m.pieceID].owner == 1) {
+    if (m.startY == m.destY || ps[m.pieceID].captured == 1 || ps[m.pieceID].owner == opponent) {
         return 0;
     }
     
@@ -204,7 +204,7 @@ int pawnValid(struct Move m, struct Piece* ps) {
         if (m.destX == m.startX + 1) { /*pawn captures right*/
             int i;
             for (i = 0; i < 32; i++) {
-                if (ps[i].xpos == m.destX && ps[i].ypos == m.destY && ps[i].captured == 0 && ps[i].owner == 1) {
+                if (ps[i].xpos == m.destX && ps[i].ypos == m.destY && ps[i].captured == 0 && ps[i].owner == opponent) {
                     return 1; /*capture piece on right*/
                 }
             }  
@@ -213,7 +213,7 @@ int pawnValid(struct Move m, struct Piece* ps) {
         else if (m.destX == m.startX - 1) { /*pawn captures left*/
             int i;
             for (i = 0; i < 32; i++) {
-                if (ps[i].xpos == m.destX && ps[i].ypos == m.destY && ps[i].captured == 0 && ps[i].owner == 1) {
+                if (ps[i].xpos == m.destX && ps[i].ypos == m.destY && ps[i].captured == 0 && ps[i].owner == opponent) {
                     return 1; /*capture piece on left*/
                 }
             }  
@@ -227,8 +227,8 @@ int pawnValid(struct Move m, struct Piece* ps) {
 }
 
 
-int knightValid(struct Move m, struct Piece* ps) {
-    if ((m.startY == m.destY && m.startX == m.destX) || ps[m.pieceID].captured == 1 || ps[m.pieceID].owner == 1) {
+int knightValid(struct Move m, struct Piece* ps, int player, int opponent) {
+    if ((m.startY == m.destY && m.startX == m.destX) || ps[m.pieceID].captured == 1 || ps[m.pieceID].owner == opponent) {
         printf("error here");
         return 0;
     }
@@ -243,7 +243,7 @@ int knightValid(struct Move m, struct Piece* ps) {
     
     int p;
     for (p = 0; p < 32; p++) {
-        if (ps[p].xpos == m.destX && ps[p].ypos == m.destY && ps[p].owner == 0) {
+        if (ps[p].xpos == m.destX && ps[p].ypos == m.destY && ps[p].owner == player) {
             return 0; /*square is blocked*/
         }
     }
@@ -254,8 +254,8 @@ int knightValid(struct Move m, struct Piece* ps) {
 
 
 
-int kingValid(struct Move m, struct Piece* ps) {
-    if ((m.startY == m.destY && m.startX == m.destX) || ps[m.pieceID].captured == 1 || ps[m.pieceID].owner == 1) {
+int kingValid(struct Move m, struct Piece* ps, int player, int opponent) {
+    if ((m.startY == m.destY && m.startX == m.destX) || ps[m.pieceID].captured == 1 || ps[m.pieceID].owner == opponent) {
         printf("error here");
         return 0;
     }
@@ -270,7 +270,7 @@ int kingValid(struct Move m, struct Piece* ps) {
     (m.destX == m.startX - 1 && m.destY == m.startY - 1)) {
     
     for (int p = 0; p < 32; p++) {
-        if (ps[p].xpos == m.destX && ps[p].ypos == m.destY && ps[p].owner == 0 && ps[p].captured == 0) {
+        if (ps[p].xpos == m.destX && ps[p].ypos == m.destY && ps[p].owner == player && ps[p].captured == 0) {
             return 0;
         }
         
@@ -280,9 +280,9 @@ int kingValid(struct Move m, struct Piece* ps) {
 return 0;
 }
 
-int rookValid(struct Move m, struct Piece* ps) {
+int rookValid(struct Move m, struct Piece* ps, int player, int opponent) {
     /*if piece is captured, controlled by opponent or doesnt move, abort*/
-    if ((m.startY == m.destY && m.startX == m.destX) || ps[m.pieceID].captured == 1 || ps[m.pieceID].owner == 1) {
+    if ((m.startY == m.destY && m.startX == m.destX) || ps[m.pieceID].captured == 1 || ps[m.pieceID].owner == opponent) {
         printf("error here");
         return 0;
     }
@@ -319,7 +319,7 @@ int rookValid(struct Move m, struct Piece* ps) {
             //printf("\nJ: %d\n", j);
             sqs[j] = m.destY;
 
-            return ywchecker(i, j, sqs, ps, m);
+            return ywchecker(i, j, sqs, ps, m, player, opponent);
         }
         case 1: {
             int sqs[m.startY - m.destY]; /*initialite array of squares the piece is passing*/
@@ -329,7 +329,7 @@ int rookValid(struct Move m, struct Piece* ps) {
                 j++;
             }
             sqs[j] = m.destY;
-            return ywchecker(i, j, sqs, ps, m);
+            return ywchecker(i, j, sqs, ps, m, player, opponent);
         }
 
         case 2: {
@@ -341,7 +341,7 @@ int rookValid(struct Move m, struct Piece* ps) {
                 j++;
             }
             sqs[j] = m.destX;
-            return xwchecker(i, j, sqs, ps, m);
+            return xwchecker(i, j, sqs, ps, m, player, opponent);
         }
         case 3: {
             int sqs[m.startX - m.destX]; /*initialite array of squares the piece is passing*/
@@ -352,7 +352,7 @@ int rookValid(struct Move m, struct Piece* ps) {
                 j++;
             }
             sqs[j] = m.destX;
-            return xwchecker(i, j, sqs, ps, m);
+            return xwchecker(i, j, sqs, ps, m, player, opponent);
         }
 
     }
@@ -361,9 +361,9 @@ int rookValid(struct Move m, struct Piece* ps) {
     return 0;
 }
 
-int bishopValid(struct Move m, struct Piece* ps) {
+int bishopValid(struct Move m, struct Piece* ps, int player, int opponent) {
 /*if piece is captured, controlled by opponent or doesnt move, abort*/
-    if ((m.startY == m.destY && m.startX == m.destX) || ps[m.pieceID].captured == 1 || ps[m.pieceID].owner == 1) {
+    if ((m.startY == m.destY && m.startX == m.destX) || ps[m.pieceID].captured == 1 || ps[m.pieceID].owner == opponent) {
         printf("error here");
         return 0;
     }    
@@ -377,7 +377,7 @@ int bishopValid(struct Move m, struct Piece* ps) {
                    sqs[i].y =  m.startY + (s - m.startX);
                    i++;
             }
-            return wchecker(i, sqs, ps, m);
+            return wchecker(i, sqs, ps, m, player, opponent);
         }
         else if (m.destX > m.startX && m.destY < m.startY) { /*piece moves right down*/
             struct Square sqs[m.destX - m.startX]; /*allocate array of squares each holding an x and y value*/ 
@@ -386,7 +386,7 @@ int bishopValid(struct Move m, struct Piece* ps) {
                    sqs[i].y =  m.startY - (s - m.startX);
                    i++;
             }
-            return wchecker(i, sqs, ps, m);
+            return wchecker(i, sqs, ps, m, player, opponent);
         }
         else if (m.destX < m.startX && m.destY > m.startY) { /*piece moves left up*/
             struct Square sqs[m.startX - m.destX]; /*allocate memory*/
@@ -395,7 +395,7 @@ int bishopValid(struct Move m, struct Piece* ps) {
                 sqs[i].x =  m.startX - (s - m.startY);
                 i++;
             }
-            return wchecker(i, sqs, ps, m);
+            return wchecker(i, sqs, ps, m, player, opponent);
         
         }
         else if (m.destX < m.startX && m.destY < m.startY) { /*piece moves left down*/
@@ -408,14 +408,15 @@ int bishopValid(struct Move m, struct Piece* ps) {
                 printf("\nX: %d\n", sqs[i].x);
                 i++;
             }
-          return wchecker(i, sqs, ps, m); 
+          return wchecker(i, sqs, ps, m, player, opponent); 
       }  
     } 
     return 0;
 }
 
 int mValid(struct Move m, struct Piece* ps, int player) { /*function to validate moves*/
-   
+   int opponent = abs(player - 1); /*if player is 1: opponent is 0 and vice versa*/
+
    struct Piece p = ps[m.pieceID];
    if (p.xpos != m.startX || p.ypos != m.startY) {
     printf("\n\nError: piece not initalized\n\n"); /*error handler*/
@@ -424,22 +425,22 @@ int mValid(struct Move m, struct Piece* ps, int player) { /*function to validate
    /*switch statement to select the right validation function dependend on the type of the piece*/
    switch (p.type) {
     case 0:
-        return pawnValid(m, ps); /*validate pawn move*/
+        return pawnValid(m, ps, player, opponent); /*validate pawn move*/
     
     case 1:
-        return rookValid(m, ps); /*validate rook move*/
+        return rookValid(m, ps, player, opponent); /*validate rook move*/
     
     case 2:
-        return knightValid(m, ps);
+        return knightValid(m, ps, player, opponent);
     
     case 3:
-        return bishopValid(m, ps);
+        return bishopValid(m, ps, player, opponent);
     
     case 4:
-        return queenValid(m, ps);
+        return queenValid(m, ps, player, opponent);
     
     case 5:
-        return kingValid(m, ps);
+        return kingValid(m, ps, player, opponent);
     
     default:
         return 0;
