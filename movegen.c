@@ -53,7 +53,7 @@ int xwchecker(int i, int j, int *sqs, struct Piece* ps, struct Move m, int playe
 
 int queenValid(struct Move m, struct Piece* ps, int player, int opponent) {
     /*if piece is captured, controlled by opponent or doesnt move, abort*/
-    if ((m.startY == m.destY && m.startX == m.destX) || ps[m.pieceID].captured == 1 || ps[m.pieceID].owner == opponent) {
+    if ((m.startY == m.destY && m.startX == m.destX) || ps[m.pieceID].captured == 1 || ps[m.pieceID].owner != player) {
         return 0;
     }
     int dr; /*direction where the rook is moving (0=up, 1=down, 2=right, 3=left, 4=right-up, 5=right-down, 6=left-up, 7=left-down)*/
@@ -297,7 +297,13 @@ if (m.startY == m.destY && ps[m.pieceID].moved == 0 && (ps[m.pieceID].ypos == 1 
         return 0;
     }
     int ncastleway = 0;
-    int castleway[5]; 
+    int castleway[5];
+    int rookID;
+    for (int r = 0; r < 32; r++) {
+        if (ps[r].xpos == rook.xpos && ps[r].ypos == rook.ypos && ps[r].captured == 0 && ps[r].owner == player) {
+            rookID = r;
+        }
+    } 
     if (m.destX == m.startX + 2) {
         ncastleway = 4;
         for (int i = 0; i < 4; i++) {
@@ -316,9 +322,9 @@ if (m.startY == m.destY && ps[m.pieceID].moved == 0 && (ps[m.pieceID].ypos == 1 
             printf("\n\nS: %d\n\n", s);
             printf("\nCAST: %d\n", castleway[s]);
         for (int p = 0; p < 32; p++) {
-            if (ps[p].ypos == ps[m.pieceID].ypos && ps[p].xpos == castleway[s] && ps[p].captured == 0) {
-                printf("test: \n%d", p);
-               // return 0;
+            if (ps[p].ypos == ps[m.pieceID].ypos && ps[p].xpos == castleway[s] && ps[p].captured == 0 && p != m.pieceID && p != rookID) {
+                printf("test: \n%d", ps[p].xpos == castleway[s]);
+                return 0;
             }
             struct Move mv;
             mv.startX = ps[p].xpos;
@@ -326,11 +332,17 @@ if (m.startY == m.destY && ps[m.pieceID].moved == 0 && (ps[m.pieceID].ypos == 1 
             mv.destX = castleway[s];
             mv.destY = 1;
             mv.pieceID = p;
-            printf("\n\nBEFOREID: %d\n\nDEST: %d%d\n----", mv.pieceID, mv.destX, mv.destY);
+            printf("mv.startX = %d;\n", mv.startX);
+            printf("mv.startY = %d;\n", mv.startY);
+            printf("mv.destX = %d;\n", mv.destX);
+            printf("mv.destY = %d;\n", mv.destY);
+            printf("mv.pieceID = %d;\n", mv.pieceID); 
+            //printf("\n\nBEFOREID: %d\n\nDEST: %d%d\n----", mv.pieceID, mv.destX, mv.destY);
             if (mValid(mv, ps, 1) == 1) {
+                printf("\nPiece no %d\n", mv.pieceID);
                 return 0;
             }
-            printf("\n\nAFTER\n\n");
+          //  printf("\n\nAFTER\n\n");
         }
         }
     return 1;
@@ -368,7 +380,7 @@ int rookValid(struct Move m, struct Piece* ps, int player, int opponent) {
     int i;
     switch (dr) {
         case 0: {
-            int sqs[m.destY - m.startY]; /*kingValinitialite array of squares the piece is passing*/
+            int sqs[m.destY - m.startY]; /*itialite array of squares the piece is passing*/
             int j = 0; /*index to iterate the empty array*/
             for (i = m.startY; i < m.destY; i++) {
                 sqs[j] = i;
@@ -475,7 +487,7 @@ int bishopValid(struct Move m, struct Piece* ps, int player, int opponent) {
 
 int mValid(struct Move m, struct Piece* ps, int player) { /*function to validate moves*/
    int opponent = abs(player - 1); /*if player is 1: opponent is 0 and vice versa*/
-
+    printf("\nOP: %d\n", opponent);
    struct Piece p = ps[m.pieceID];
    if (p.xpos != m.startX || p.ypos != m.startY) {
     printf("\n\nError: piece not initalized\n\n"); /*error handler*/
@@ -574,7 +586,7 @@ ps[13].ypos = 1;
 // Queens
 ps[14].type = 4; // Queen
 ps[14].owner = 0; // White
-ps[14].captured = 0;
+ps[14].captured = 1;
 ps[14].moved = 0;
 ps[14].xpos = 4;
 ps[14].ypos = 1;
