@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "structs.h"
-
+int mValid(struct Move m, struct Piece* ps, int player);
 int wchecker(int i, struct Square* sqs, struct Piece* ps, struct Move m, int player, int opponent) {
     int p;
 
@@ -277,21 +277,24 @@ int kingValid(struct Move m, struct Piece* ps, int player, int opponent) {
     }
     return 1;
 }
-if (m.startY == m.destY && ps[m.pieceID].moved == 0) {
+if (m.startY == m.destY && ps[m.pieceID].moved == 0 && (ps[m.pieceID].ypos == 1 || ps[m.pieceID].ypos == 8)) {
     struct Piece rook;
     if (m.destX == m.startX + 2) {
         for (int p = 0; p < 32; p++) {
-            if (ps[p].xpos == 8 && ps[p].ypos == 1 && ps[p].owner == player && ps[p].captured == 0) {
+            if (ps[p].xpos == 8 && ps[p].ypos == ps[m.pieceID].ypos && ps[p].owner == player && ps[p].captured == 0) {
                 rook = ps[p];
             }
         }
     }
     else if (m.destX == m.startX - 2) {
         for (int p = 0; p < 32; p++) {
-            if (ps[p].xpos == 1 && ps[p].ypos == 1 && ps[p].owner == player && ps[p].captured == 0) {
+            if (ps[p].xpos == 1 && ps[p].ypos == ps[m.pieceID].ypos && ps[p].owner == player && ps[p].captured == 0) {
                 rook = ps[p];
             }
         }
+    }
+    if (rook.moved == 1) {
+        return 0;
     }
     int ncastleway = 0;
     int castleway[5]; 
@@ -307,24 +310,30 @@ if (m.startY == m.destY && ps[m.pieceID].moved == 0) {
             castleway[i] = 5 - i;
         }
     }
-
+    
     if (ncastleway != 0) {
-        for (int s = 0; s < ncastleway; s++)
+        for (int s = 0; s < ncastleway; s++) {
+            printf("\n\nS: %d\n\n", s);
+            printf("\nCAST: %d\n", castleway[s]);
         for (int p = 0; p < 32; p++) {
-            if (ps[p].ypos == 1 && ps[p].xpos == castleway[s] && ps[p].captured == 0) {
+            if (ps[p].ypos == ps[m.pieceID].ypos && ps[p].xpos == castleway[s] && ps[p].captured == 0) {
+                printf("test: \n%d", p);
+               // return 0;
+            }
+            struct Move mv;
+            mv.startX = ps[p].xpos;
+            mv.startY = ps[p].ypos;
+            mv.destX = castleway[s];
+            mv.destY = 1;
+            mv.pieceID = p;
+            printf("\n\nBEFOREID: %d\n\nDEST: %d%d\n----", mv.pieceID, mv.destX, mv.destY);
+            if (mValid(mv, ps, 1) == 1) {
                 return 0;
             }
-            struct Move move;
-            move.startX = ps[p].xpos;
-            move.startY = ps[p].ypos;
-            move.destX = s;
-            move.destY = 1;
-            move.pieceID = p;
-            if (mValid(move, ps, 1) == 1) {
-                return 0;
-            }
+            printf("\n\nAFTER\n\n");
         }
-
+        }
+    return 1;
     }
 }
 return 0;
@@ -359,7 +368,7 @@ int rookValid(struct Move m, struct Piece* ps, int player, int opponent) {
     int i;
     switch (dr) {
         case 0: {
-            int sqs[m.destY - m.startY]; /*initialite array of squares the piece is passing*/
+            int sqs[m.destY - m.startY]; /*kingValinitialite array of squares the piece is passing*/
             int j = 0; /*index to iterate the empty array*/
             for (i = m.startY; i < m.destY; i++) {
                 sqs[j] = i;
@@ -406,7 +415,7 @@ int rookValid(struct Move m, struct Piece* ps, int player, int opponent) {
         }
 
     }
-    printf("\n\nDIR:%d\n\n", dr);
+
 
     return 0;
 }
@@ -535,14 +544,14 @@ ps[9].ypos = 1;
 // Knights
 ps[10].type = 2; // Knight
 ps[10].owner = 0; // White
-ps[10].captured = 0;
+ps[10].captured = 1;
 ps[10].moved = 0;
 ps[10].xpos = 2;
 ps[10].ypos = 1;
 
 ps[11].type = 2; // Knight
 ps[11].owner = 0; // White
-ps[11].captured = 0;
+ps[11].captured = 1;
 ps[11].moved = 0;
 ps[11].xpos = 7;
 ps[11].ypos = 1;
@@ -550,14 +559,14 @@ ps[11].ypos = 1;
 // Bishops
 ps[12].type = 3; // Bishop
 ps[12].owner = 0; // White
-ps[12].captured = 0;
+ps[12].captured = 1;
 ps[12].moved = 0;
 ps[12].xpos = 3;
 ps[12].ypos = 1;
 
 ps[13].type = 3; // Bishop
 ps[13].owner = 0; // White
-ps[13].captured = 0;
+ps[13].captured = 1;
 ps[13].moved = 0;
 ps[13].xpos = 6;
 ps[13].ypos = 1;
