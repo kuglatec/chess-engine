@@ -277,6 +277,56 @@ int kingValid(struct Move m, struct Piece* ps, int player, int opponent) {
     }
     return 1;
 }
+if (m.startY == m.destY && ps[m.pieceID].moved == 0) {
+    struct Piece rook;
+    if (m.destX == m.startX + 2) {
+        for (int p = 0; p < 32; p++) {
+            if (ps[p].xpos == 8 && ps[p].ypos == 1 && ps[p].owner == player && ps[p].captured == 0) {
+                rook = ps[p];
+            }
+        }
+    }
+    else if (m.destX == m.startX - 2) {
+        for (int p = 0; p < 32; p++) {
+            if (ps[p].xpos == 1 && ps[p].ypos == 1 && ps[p].owner == player && ps[p].captured == 0) {
+                rook = ps[p];
+            }
+        }
+    }
+    int ncastleway = 0;
+    int castleway[5]; 
+    if (m.destX == m.startX + 2) {
+        ncastleway = 4;
+        for (int i = 0; i < 4; i++) {
+            castleway[i] = 5 + i;
+        }
+    }
+    else if (m.destX == m.startX - 2) {
+        ncastleway = 5;
+        for (int i = 0; i < 5; i++) {
+            castleway[i] = 5 - i;
+        }
+    }
+
+    if (ncastleway != 0) {
+        for (int s = 0; s < ncastleway; s++)
+        for (int p = 0; p < 32; p++) {
+            if (ps[p].ypos == 1 && ps[p].xpos == castleway[s] && ps[p].captured == 0) {
+                return 0;
+            }
+            struct Move move;
+            move.startX = ps[p].xpos;
+            move.startY = ps[p].ypos;
+            move.destX = s;
+            move.destY = 1;
+            move.pieceID = p;
+            if (mValid(move, ps, 1) == 1) {
+                return 0;
+            }
+        }
+
+    }
+}
 return 0;
 }
 
