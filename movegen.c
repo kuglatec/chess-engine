@@ -1,7 +1,16 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "structs.h"
+/*init values for pieces in decipawns*/
+#define QUEEN 90 
+#define ROOK 50
+#define PAWN 10
+#define KNIGHT 30
+#define BISHOP 32
+#define KING 10000
+
 int mValid(struct Move m, struct Piece* ps, int player);
+
 int wchecker(int i, struct Square* sqs, struct Piece* ps, struct Move m, int player, int opponent) {
     int p;
 
@@ -520,12 +529,67 @@ int mValid(struct Move m, struct Piece* ps, int player) { /*function to validate
 }  
 
 
+int materialCounter(struct Piece* tps) {
+    int tmpscore = 0;
+    for (int p = 0; p < 16; p++) {
+        if (tps[p].captured == 0) {
+            switch (tps[p].type) {
+            case 0:
+                tmpscore++; 
+    
+            case 1:
+                tmpscore = tmpscore + ROOK;
+    
+            case 2:
+                tmpscore = tmpscore + KNIGHT;
+    
+            case 3:
+                tmpscore = tmpscore + BISHOP;
+    
+            case 4:
+                tmpscore = tmpscore + QUEEN;
+            
+            case 5:
+                tmpscore = tmpscore + KING;
+             }
+        }
+    }
+    return tmpscore;
+}
+
+
+int eval(struct Piece* ps, int player) {
+    int opponent = abs(player - 1); /*opponent gets declared (if player is 1, opponent is 0 and vice versa)*/
+    int score; /*players score*/
+    int opscore; /*opponents score*/
+    int tmpscore = 0; /*temporary score buffer*/
+    struct Piece* pps = (struct Piece*)calloc(16, sizeof(struct Piece)); /*player pieces*/
+    struct Piece* ops = (struct Piece*)calloc(16, sizeof(struct Piece)); /*opponent pieces*/
+    int npps = 0;
+    int nops = 0;
+    for (int p = 0; p < 32; p++)
+        if (ps[p].owner == player) {
+            pps[npps] = ps[p];
+            npps++;
+        }
+        else if (ps[p].owner == opponent) {
+            ops[nops] = ps[p];
+            nops++;
+        }
+    
+    score = materialCounter(pps);
+    opscore = materialCounter(ops);
+    score = score - opscore;
+    return score;
+    
+
+}
+
 
 struct Piece* loadpieces() {
     struct Piece* ps = (struct Piece*)calloc(32, sizeof(struct Piece)); /*allocate memory for 32 pieces*/
     /*temporary workaround for setting the state of pieces hardcoded*/
    /*TODO: implement FEN and UCI*/    
-    /*engine pawns*/
 
     // White pieces
 // Pawns
@@ -556,14 +620,14 @@ ps[9].ypos = 1;
 // Knights
 ps[10].type = 2; // Knight
 ps[10].owner = 0; // White
-ps[10].captured = 1;
+ps[10].captured = 0;
 ps[10].moved = 0;
 ps[10].xpos = 2;
 ps[10].ypos = 1;
 
 ps[11].type = 2; // Knight
 ps[11].owner = 0; // White
-ps[11].captured = 1;
+ps[11].captured = 0;
 ps[11].moved = 0;
 ps[11].xpos = 7;
 ps[11].ypos = 1;
@@ -571,14 +635,14 @@ ps[11].ypos = 1;
 // Bishops
 ps[12].type = 3; // Bishop
 ps[12].owner = 0; // White
-ps[12].captured = 1;
+ps[12].captured = 0;
 ps[12].moved = 0;
 ps[12].xpos = 3;
 ps[12].ypos = 1;
 
 ps[13].type = 3; // Bishop
 ps[13].owner = 0; // White
-ps[13].captured = 1;
+ps[13].captured = 0;
 ps[13].moved = 0;
 ps[13].xpos = 6;
 ps[13].ypos = 1;
@@ -586,7 +650,7 @@ ps[13].ypos = 1;
 // Queens
 ps[14].type = 4; // Queen
 ps[14].owner = 0; // White
-ps[14].captured = 1;
+ps[14].captured = 0;
 ps[14].moved = 0;
 ps[14].xpos = 4;
 ps[14].ypos = 1;
