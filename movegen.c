@@ -9,6 +9,8 @@
 #define BISHOP 32
 #define KING 10000
 
+
+
 int mValid(struct Move m, struct Piece* ps, int player);
 
 int wchecker(int i, struct Square* sqs, struct Piece* ps, struct Move m, int player, int opponent) {
@@ -577,7 +579,26 @@ int eval(struct Piece* ps, int player) {
             nops++;
         }
     
+    int pmoves = 0; /*number of possible moves*/
+    struct Move mv;
+    
+
     score = materialCounter(pps);
+    /*for (int p = 0; p < 32; p++) {
+        for (int x = 1; x < 9; x++) {
+            for (int y = 1; y < 9; y++) {
+                mv.startX = ps[p].xpos;
+                mv.startY = ps[p].ypos;
+                mv.destX = x;
+                mv.destY = y;
+                mv.pieceID = p;
+                if (mValid(mv, ps, player) == 1) {
+                    score = score + 1;
+                }
+            }
+        }
+    }
+    */
     opscore = materialCounter(ops);
     score = score - opscore;
     return score;
