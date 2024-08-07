@@ -536,24 +536,27 @@ int materialCounter(struct Piece* tps) {
     for (int p = 0; p < 16; p++) {
         if (tps[p].captured == 0) {
             switch (tps[p].type) {
-            case 0:
-                tmpscore++; 
-    
-            case 1:
-                tmpscore = tmpscore + ROOK;
-    
-            case 2:
-                tmpscore = tmpscore + KNIGHT;
-    
-            case 3:
-                tmpscore = tmpscore + BISHOP;
-    
-            case 4:
-                tmpscore = tmpscore + QUEEN;
-            
-            case 5:
-                tmpscore = tmpscore + KING;
-             }
+                case 0:
+                    tmpscore += PAWN;
+                    break;
+                case 1:
+                    tmpscore += ROOK;
+                    break;
+                case 2:
+                    tmpscore += KNIGHT;
+                    break; 
+                case 3:
+                    tmpscore += BISHOP;
+                    break; 
+                case 4:
+                    tmpscore += QUEEN;
+                    break; 
+                case 5:
+                    tmpscore += KING;
+                    break; 
+                default:
+                    break;
+            }
         }
     }
     return tmpscore;
@@ -584,7 +587,7 @@ int eval(struct Piece* ps, int player) {
     
 
     score = materialCounter(pps);
-    /*for (int p = 0; p < 32; p++) {
+    for (int p = 0; p < 32; p++) {
         for (int x = 1; x < 9; x++) {
             for (int y = 1; y < 9; y++) {
                 mv.startX = ps[p].xpos;
@@ -594,11 +597,12 @@ int eval(struct Piece* ps, int player) {
                 mv.pieceID = p;
                 if (mValid(mv, ps, player) == 1) {
                     score = score + 1;
+                    printf("\n\nPIECEID: %d\n\n", p);
                 }
             }
         }
     }
-    */
+    
     opscore = materialCounter(ops);
     score = score - opscore;
     return score;
@@ -671,7 +675,7 @@ ps[13].ypos = 1;
 // Queens
 ps[14].type = 4; // Queen
 ps[14].owner = 0; // White
-ps[14].captured = 0;
+ps[14].captured = 1;
 ps[14].moved = 0;
 ps[14].xpos = 4;
 ps[14].ypos = 1;
