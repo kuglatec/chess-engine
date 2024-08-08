@@ -372,9 +372,22 @@ int rookValid(struct Move m, struct Piece* ps, int player, int opponent) {
     int dr; /*direction where the rook is moving (0=up, 1=down, 2=right, 3=left)*/
 
     if (m.startX == m.destX) { /*rook moves on Y axis*/
+
         if (m.startY < m.destY) {
-            dr = 0; /*rook moves up*/
-            printf("\nRook moved %d squares \n", m.destY - m.startY);
+            int index = 0;
+            struct Square sqs[m.destY - m.startY];
+            for (int i = m.startY + 1; i <= m.destY; i++) {
+                sqs[index].x = m.startX;
+                sqs[index].y = m.startY + (i - 1);
+                //printf("\nI: %d\n", index);
+                index++;
+               // printf("\nI: %d\n", index);
+            }
+            for (int i = 0; i <= m.destY - m.startY; i++) {
+                printf("\nITER: %d%d\n", sqs[i].x, sqs[i].y);
+            }
+            
+            
         }
         else if (m.startY > m.destY) {
             dr = 1; /*rook moves down*/
@@ -388,58 +401,6 @@ int rookValid(struct Move m, struct Piece* ps, int player, int opponent) {
             dr = 3; /*rook moves left*/
         }    
     }
-    int i;
-    switch (dr) {
-        case 0: {
-            int sqs[m.destY - m.startY]; /*itialite array of squares the piece is passing*/
-            int j = 0; /*index to iterate the empty array*/
-            for (i = m.startY; i < m.destY; i++) {
-                sqs[j] = i;
-                j++;
-                printf("\nI: %d\n", i);
-            }
-            //printf("\nJ: %d\n", j);
-            sqs[j] = m.destY;
-
-            return ywchecker(i, j, sqs, ps, m, player, opponent);
-        }
-        case 1: {
-            int sqs[m.startY - m.destY]; /*initialite array of squares the piece is passing*/
-            int j = 0; /*index to iterate the empty array*/
-            for (i = m.startY; i > m.destY; i--) {
-                sqs[j] = i;
-                j++;
-            }
-            sqs[j] = m.destY;
-            return ywchecker(i, j, sqs, ps, m, player, opponent);
-        }
-
-        case 2: {
-            int sqs[m.destX - m.startX]; /*initialite array of squares the piece is passing*/
-            int j = 0; /*index to iterate the empty array*/
-            int p;
-            for (i = m.startX; i > m.destX; i--) {
-                sqs[j] = i;
-                j++;
-            }
-            sqs[j] = m.destX;
-            return xwchecker(i, j, sqs, ps, m, player, opponent);
-        }
-        case 3: {
-            int sqs[m.startX - m.destX]; /*initialite array of squares the piece is passing*/
-            int j = 0; /*index to iterate the empty array*/
-            int p;
-            for (i = m.startX; i > m.destX; i--) {
-                sqs[j] = i;
-                j++;
-            }
-            sqs[j] = m.destX;
-            return xwchecker(i, j, sqs, ps, m, player, opponent);
-        }
-
-    }
-
-
     return 0;
 }
 
