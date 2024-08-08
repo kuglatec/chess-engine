@@ -11,22 +11,16 @@
 
 
 
+
 int mValid(struct Move m, struct Piece* ps, int player);
 
 int wchecker(int i, struct Square* sqs, struct Piece* ps, struct Move m, int player, int opponent) {
     int p;
-
     for (int j = 0; j <= i; j++) {
-        printf("okay: %d/%d\nJ:%d\n", sqs[j].x, sqs[j].y, j);
-       // printf("\nm: %d/%d\n", m.startX, m.startY);
+        printf("\n%d/%d\n", sqs[j].x, sqs[j].y);
         if (!(sqs[j].x == m.startX && sqs[j].y == m.startY)) {
-          //  printf("\n\n su\n\n");
-         //   printf("okay: %d/%d\nJ:%d", sqs[j].x, sqs[j].y, j);
             for (p = 0; p < 32; p++) {
-               // printf("\n%d\n", p);
-                printf("\nblock: %d\n", ps[p].xpos == sqs[j].x && ps[p].ypos == sqs[j].y);
                 if (ps[p].xpos == sqs[j].x && ps[p].ypos == sqs[j].y && ps[p].captured == 0) {
-                    printf("\nblock: %d\n", ps[p].xpos == sqs[j].x && ps[p].ypos == sqs[j].y);
                      if (!(ps[p].ypos == m.destY && ps[p].xpos == m.destX) || ((ps[p].xpos == m.destX && ps[p].ypos == m.destY) && ps[p].owner == player)) {
                             return 0; 
                         }
@@ -375,47 +369,48 @@ int rookValid(struct Move m, struct Piece* ps, int player, int opponent) {
         return 0;
     }
 
-    int dr; /*direction where the rook is moving (0=up, 1=down, 2=right, 3=left)*/
+    int index = 0;
 
     if (m.startX == m.destX) { /*rook moves on Y axis*/
 
         if (m.startY < m.destY) {
-            int index = 0;
             struct Square sqs[m.destY - m.startY];
             for (int i = m.startY + 1; i <= m.destY; i++) {
                 sqs[index].x = m.startX;
-                sqs[index].y = m.startY + (i - 1);
+                sqs[index].y = i;
                 index++;
             }
-            index =-1;
             return wchecker(index, sqs, ps, m, player, opponent);
         }
         else if (m.startY > m.destY) {
-            int index = 0;
             struct Square sqs[m.startY - m.destY];
             for (int i = m.startY - 1; i >= m.destY; i--) {
                 sqs[index].x = m.startX;
-                sqs[index].y = m.startY - (i + 1);
+                sqs[index].y = i;;
                 index++;
             }
-            index =-1;
             return wchecker(index, sqs, ps, m, player, opponent);
         }
     }
     else if (m.startY == m.destY) { /*rook moves on x axis*/
         if (m.startX < m.destX) {
-            int index = 0;
             struct Square sqs[m.destX - m.startX];
             for (int i = m.startX + 1; i <= m.destX; i++) {
-                sqs[index].x = m.startX + (i - 1);
+                sqs[index].x = i;
                 sqs[index].y = m.startY;
                 index++;
             }
-            index =-1;
             return wchecker(index, sqs, ps, m, player, opponent);
         } 
         else if (m.startX > m.destX) {
-            dr = 3; /*rook moves left*/
+            printf("test: %d", m.startX - m.destX);
+            struct Square sqs[m.startX - m.destX];
+            for (int i = m.startX - 1; i >= m.destX; i--) {
+                sqs[index].x = i;
+                sqs[index].y = m.startY;
+                index++;
+            }
+            return wchecker(index, sqs, ps, m, player, opponent);
         }    
     }
     return 0;
@@ -476,7 +471,6 @@ int bishopValid(struct Move m, struct Piece* ps, int player, int opponent) {
 
 int mValid(struct Move m, struct Piece* ps, int player) { /*function to validate moves*/
    int opponent = abs(player - 1); /*if player is 1: opponent is 0 and vice versa*/
-    printf("\nOP: %d\n", opponent);
    struct Piece p = ps[m.pieceID];
    if (p.xpos != m.startX || p.ypos != m.startY) {
     printf("\n\nError: piece not initalized\n\n"); /*error handler*/
@@ -610,7 +604,7 @@ ps[8].type = 1; // Rook
 ps[8].owner = 0; // White
 ps[8].captured = 0;
 ps[8].moved = 0;
-ps[8].xpos = 1;
+ps[8].xpos = 7;
 ps[8].ypos = 5;
 
 ps[9].type = 1; // Rook
@@ -653,7 +647,7 @@ ps[13].ypos = 1;
 // Queens
 ps[14].type = 4; // Queen
 ps[14].owner = 0; // White
-ps[14].captured = 1;
+ps[14].captured = 0;
 ps[14].moved = 0;
 ps[14].xpos = 5;
 ps[14].ypos = 5;
