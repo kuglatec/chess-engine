@@ -17,11 +17,17 @@ int wchecker(int i, struct Square* sqs, struct Piece* ps, struct Move m, int pla
     int p;
 
     for (int j = 0; j <= i; j++) {
-        if (sqs[j].x != m.startX && sqs[j].y != m.startY) {
+        printf("okay: %d/%d\nJ:%d\n", sqs[j].x, sqs[j].y, j);
+       // printf("\nm: %d/%d\n", m.startX, m.startY);
+        if (!(sqs[j].x == m.startX && sqs[j].y == m.startY)) {
+          //  printf("\n\n su\n\n");
+         //   printf("okay: %d/%d\nJ:%d", sqs[j].x, sqs[j].y, j);
             for (p = 0; p < 32; p++) {
                // printf("\n%d\n", p);
+                printf("\nblock: %d\n", ps[p].xpos == sqs[j].x && ps[p].ypos == sqs[j].y);
                 if (ps[p].xpos == sqs[j].x && ps[p].ypos == sqs[j].y && ps[p].captured == 0) {
-                     if ((ps[p].ypos != m.destY && ps[p].xpos != m.destX) || ((ps[p].xpos == m.destX && ps[p].ypos == m.destY) && ps[p].owner == player)) {
+                    printf("\nblock: %d\n", ps[p].xpos == sqs[j].x && ps[p].ypos == sqs[j].y);
+                     if (!(ps[p].ypos == m.destY && ps[p].xpos == m.destX) || ((ps[p].xpos == m.destX && ps[p].ypos == m.destY) && ps[p].owner == player)) {
                             return 0; 
                         }
                 }
@@ -379,23 +385,34 @@ int rookValid(struct Move m, struct Piece* ps, int player, int opponent) {
             for (int i = m.startY + 1; i <= m.destY; i++) {
                 sqs[index].x = m.startX;
                 sqs[index].y = m.startY + (i - 1);
-                //printf("\nI: %d\n", index);
                 index++;
-               // printf("\nI: %d\n", index);
             }
-            for (int i = 0; i <= m.destY - m.startY; i++) {
-                printf("\nITER: %d%d\n", sqs[i].x, sqs[i].y);
-            }
-            
-            
+            index =-1;
+            return wchecker(index, sqs, ps, m, player, opponent);
         }
         else if (m.startY > m.destY) {
-            dr = 1; /*rook moves down*/
+            int index = 0;
+            struct Square sqs[m.startY - m.destY];
+            for (int i = m.startY - 1; i >= m.destY; i--) {
+                sqs[index].x = m.startX;
+                sqs[index].y = m.startY - (i + 1);
+                index++;
+            }
+            index =-1;
+            return wchecker(index, sqs, ps, m, player, opponent);
         }
     }
     else if (m.startY == m.destY) { /*rook moves on x axis*/
         if (m.startX < m.destX) {
-            dr = 2; /*rook moves right*/
+            int index = 0;
+            struct Square sqs[m.destX - m.startX];
+            for (int i = m.startX + 1; i <= m.destX; i++) {
+                sqs[index].x = m.startX + (i - 1);
+                sqs[index].y = m.startY;
+                index++;
+            }
+            index =-1;
+            return wchecker(index, sqs, ps, m, player, opponent);
         } 
         else if (m.startX > m.destX) {
             dr = 3; /*rook moves left*/
@@ -594,7 +611,7 @@ ps[8].owner = 0; // White
 ps[8].captured = 0;
 ps[8].moved = 0;
 ps[8].xpos = 1;
-ps[8].ypos = 1;
+ps[8].ypos = 5;
 
 ps[9].type = 1; // Rook
 ps[9].owner = 0; // White
@@ -638,8 +655,8 @@ ps[14].type = 4; // Queen
 ps[14].owner = 0; // White
 ps[14].captured = 1;
 ps[14].moved = 0;
-ps[14].xpos = 4;
-ps[14].ypos = 1;
+ps[14].xpos = 5;
+ps[14].ypos = 5;
 
 // Kings
 ps[15].type = 5; // King
