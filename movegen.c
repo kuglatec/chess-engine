@@ -9,7 +9,8 @@
 #define BISHOP 32
 #define KING 10000
 
-
+struct Square kqs[2]; /*keysquares (D & E 4 or D & E 5)*/
+struct Square iqs[2]; /*important squares (C & F 4 or C & F 5)*/
 
 
 int mValid(struct Move m, struct Piece* ps, int player);
@@ -30,38 +31,6 @@ int wchecker(int i, struct Square* sqs, struct Piece* ps, struct Move m, int pla
     } 
     return 1;
 }
-
-int ywchecker(int i, int j, int *sqs, struct Piece* ps, struct Move m, int player, int opponent){ /*function for checking if the piece is blocked when moving on the y axis*/
-    int p;
-    for (i = 0; i <= j; i++) {
-                if (sqs[i] != m.startY) {
-                    for (p = 0; p < 32; p++) {
-                        if (ps[p].captured == 0 && ps[p].xpos == m.startX) {
-                                if (sqs[i] == ps[p].ypos && (ps[p].ypos != m.destY || (ps[p].ypos == m.destY && ps[p].owner == player))) {
-                                    return 0; /*some piece is blocking*/
-                                }
-                    
-                }
-            }}}
-            return 1; /* no blockers*/
-}
-
-int xwchecker(int i, int j, int *sqs, struct Piece* ps, struct Move m, int player, int opponent){ /*function for checking if the piece is blocked when moving on the y axis*/
-    int p;
-    for (i = 0; i <= j; i++) {
-                if (sqs[i] != m.startX) {
-                    for (p = 0; p < 32; p++) {
-                        if (ps[p].captured == 0 && ps[p].ypos == m.startY) {
-                                if (sqs[i] == ps[p].xpos && (ps[p].xpos != m.destX || (ps[p].xpos == m.destX && ps[p].owner == player))) {
-                                    return 0; /*some piece is blocking*/
-                                }
-                    
-                }
-            }}}
-            return 1; /* no blockers*/
-}
-
-
 int queenValid(struct Move m, struct Piece* ps, int player, int opponent) {
     /*if piece is captured, controlled by opponent or doesnt move, abort*/
     if ((m.startY == m.destY && m.startX == m.destX) || ps[m.pieceID].captured == 1 || ps[m.pieceID].owner != player) {
