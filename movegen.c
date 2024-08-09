@@ -13,15 +13,17 @@ struct Square kqs[2]; /*keysquares (D & E 4 or D & E 5)*/
 struct Square iqs[2]; /*important squares (C & F 4 or C & F 5)*/
 
 
-int mValid(struct Move m, struct Piece* ps, int player);
+int mValid(struct Move m, struct Piece* ps, const int player);
 
 int wchecker(int i, struct Square* sqs, struct Piece* ps, struct Move m, int player, int opponent) {
     int p;
     for (int j = 0; j <= i; j++) {
-     //   printf("\n%d/%d\n", sqs[j].x, sqs[j].y);
+        
         if (!(sqs[j].x == m.startX && sqs[j].y == m.startY)) {
             for (p = 0; p < 32; p++) {
                 if (ps[p].xpos == sqs[j].x && ps[p].ypos == sqs[j].y && ps[p].captured == 0) {
+                    printf("pas: %d\n", player);
+                  //  printf("\n%d/%d\n", sqs[j].x, sqs[j].y);
                      if (!(ps[p].ypos == m.destY && ps[p].xpos == m.destX) || ((ps[p].xpos == m.destX && ps[p].ypos == m.destY) && ps[p].owner == player)) {
                             return 0; 
                         }
@@ -363,12 +365,14 @@ int rookValid(struct Move m, struct Piece* ps, int player, int opponent) {
     return 0;
 }
 
-int bishopValid(struct Move m, struct Piece* ps, int player, int opponent) {
+int bishopValid(struct Move m, struct Piece* ps, const int player, int opponent) {
+    
 /*if piece is captured, controlled by opponent or doesnt move, abort*/
     if ((m.startY == m.destY && m.startX == m.destX) || ps[m.pieceID].captured == 1 || ps[m.pieceID].owner == opponent) {
       //  printf("error here");
         return 0;
     }    
+    printf("\nPLAYER: %d\n", player);
     if (abs(m.destX - m.startX) == abs(m.destY - m.startY)) { /*check if piece moves on a diagonal*/
         int i = 0; /*index for sqs array*/
         int s; /*integet holding temp. square*/
@@ -379,8 +383,10 @@ int bishopValid(struct Move m, struct Piece* ps, int player, int opponent) {
                    sqs[i].y =  m.startY + (s - m.startX);
                    i++;
             }
+            
             return wchecker(i, sqs, ps, m, player, opponent);
         }
+        
         else if (m.destX > m.startX && m.destY < m.startY) { /*piece moves right down*/
             struct Square sqs[m.destX - m.startX]; /*allocate array of squares each holding an x and y value*/ 
             for (s = m.startX; i <= m.destX - m.startX; s++) {
@@ -391,16 +397,21 @@ int bishopValid(struct Move m, struct Piece* ps, int player, int opponent) {
             return wchecker(i, sqs, ps, m, player, opponent);
         }
         else if (m.destX < m.startX && m.destY > m.startY) { /*piece moves left up*/
-            printf("test");
+         //   printf("test");
             struct Square sqs[m.startX - m.destX]; /*allocate memory*/
             for (s = m.startY; i <= m.destY - m.startY; s++) {
                 sqs[i].y = s;
+                //printf("\nY: %d\n", sqs[i].y);
                 sqs[i].x =  m.startX - (s - m.startY);
+                //printf("\nX: %d\n", sqs[i].x);
+                //printf("INDEX: %d\n", i);
                 i++;
             }
+            printf("\nPLAYERS: %d\n", player);
             for (int j = 0; j < i; j++) {
-                printf("\n%d/%d\n", sqs[i].x, sqs[i].y);
+             //   printf("\n%d/%d\n", sqs[i].x, sqs[i].y);
             }
+            printf("\nPLAYER: %d\n", player);
             return wchecker(i, sqs, ps, m, player, opponent);
         
         }
@@ -420,8 +431,9 @@ int bishopValid(struct Move m, struct Piece* ps, int player, int opponent) {
     return 0;
 }
 
-int mValid(struct Move m, struct Piece* ps, int player) { /*function to validate moves*/
+int mValid(struct Move m, struct Piece* ps, const int player) { /*function to validate moves*/
    int opponent = abs(player - 1); /*if player is 1: opponent is 0 and vice versa*/
+   
    struct Piece p = ps[m.pieceID];
    if (p.xpos != m.startX || p.ypos != m.startY) {
     printf("\n\nError: piece not initalized\n\n"); /*error handler*/
@@ -439,6 +451,7 @@ int mValid(struct Move m, struct Piece* ps, int player) { /*function to validate
         return knightValid(m, ps, player, opponent);
     
     case 3:
+        printf("KK: %d\n", player);
         return bishopValid(m, ps, player, opponent);
     
     case 4:
