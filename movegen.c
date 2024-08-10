@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 #include "structs.h"
 /*init values for pieces in decipawns*/
 #define QUEEN 90 
@@ -613,6 +612,30 @@ int eval(struct Piece* ps, int player) {
     return score;
     
 
+}
+
+
+struct Move* getMoves(struct Piece* ps, int player) {
+     struct Move mv;
+     struct Move* mvs = (struct Move*)calloc(256, sizeof(struct Move)); /*array of valid moves*/
+     int nom = 0; /*number of moves*/
+     for (int p = 0; p < 32; p++) {
+        for (int x = 1; x < 9; x++) {
+            for (int y = 1; y < 9; y++) {
+                mv.startX = ps[p].xpos;
+                mv.startY = ps[p].ypos;
+                mv.destX = x;
+                mv.destY = y;
+                mv.pieceID = p;
+                printf("\n%d", mv.pieceID);
+                if (mValid(mv, ps, player) == 1) {
+                    mvs[nom] = mv;
+                    nom++;
+                }
+                mvs[0].arlen = nom;
+            }
+        }
+    }
 }
 
 
