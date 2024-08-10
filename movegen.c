@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "structs.h"
 /*init values for pieces in decipawns*/
 #define QUEEN 90 
@@ -352,7 +353,6 @@ int rookValid(struct Move m, struct Piece* ps, int player, int opponent) {
             return wchecker(index, sqs, ps, m, player, opponent);
         } 
         else if (m.startX > m.destX) {
-            printf("test: %d", m.startX - m.destX);
             struct Square sqs[m.startX - m.destX];
             for (int i = m.startX - 1; i >= m.destX; i--) {
                 sqs[index].x = i;
@@ -372,7 +372,6 @@ int bishopValid(struct Move m, struct Piece* ps, const int pl, int op) {
 /*if piece is captured, controlled by opponent or doesnt move, abort*/
     if ((m.startY == m.destY && m.startX == m.destX) || ps[m.pieceID].captured == 1 || ps[m.pieceID].owner != player) {
       //  printf("error here");
-        printf("\nPLAYER: %d PID:%d\n", ps[m.pieceID].owner, m.pieceID);
         return 0;
     }    
     
@@ -532,20 +531,31 @@ int eval(struct Piece* ps, int player) {
             king = pps[i];
         }
     }
+    score = materialCounter(pps);
     kqs[0].x = 4;
     kqs[1].x = 5;
+    iqs[0].x = 3;
+    iqs[1].x = 6;
     if (king.ypos == 1 || king.ypos == 2) {
         kqs[0].y = 5;
         kqs[1].y = 5;
+        kqs[0].y = 5;
+        kqs[0].y = 5;
     }
     else if (king.ypos == 8 || king.ypos == 7){
         kqs[0].y = 4;
         kqs[1].y = 4;
+        kqs[0].y = 4;
+        kqs[0].y = 4;
     }
     else {
         noKey = 1;
     }
     struct Move mv;
+    printf("nokey: %d\n", noKey);
+    for (int i = 0; i < 2; i++) {
+        printf("");
+    }
     if (noKey != 1) {
         for (int p = 0; p < 32; p++) {
             for (int i = 0; i < 2; i++) {
@@ -557,6 +567,20 @@ int eval(struct Piece* ps, int player) {
                 mv.pieceID = p;
                 if (mValid(mv, ps, player) == 1) {
                     score = score + 1;
+
+                  //  printf("\n\nPIECEID: %d\n\n", p);
+                }
+            }
+            for (int i = 0; i < 2; i++) {
+                mv.startX = ps[p].xpos;
+                mv.startY = ps[p].ypos;
+                mv.destX = iqs[i].x;
+                mv.destY = iqs[i].y;
+                printf("\n%d/%d\n", mv.destX, mv.destY);
+                mv.pieceID = p;
+                if (mValid(mv, ps, player) == 1) {
+                    score = score + 1;
+
                   //  printf("\n\nPIECEID: %d\n\n", p);
                 }
             }
@@ -566,7 +590,7 @@ int eval(struct Piece* ps, int player) {
     int pmoves = 0; /*number of possible moves*/
     
 
-    score = materialCounter(pps);
+    
     for (int p = 0; p < 32; p++) {
         for (int x = 1; x < 9; x++) {
             for (int y = 1; y < 9; y++) {
@@ -575,6 +599,8 @@ int eval(struct Piece* ps, int player) {
                 mv.destX = x;
                 mv.destY = y;
                 mv.pieceID = p;
+                char testr[32];
+                printf("\n%d", mv.pieceID);
                 if (mValid(mv, ps, player) == 1) {
                     score = score + 1;
                 }
