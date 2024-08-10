@@ -10,4 +10,6 @@ in the near future, i plan to implement the minimax algorithm with alpha beta pr
 
 # usage
 set your pieces in the hardcoded array defined in movegen.c
-´´´gcc main.c && ./a.out´´´
+´´´
+gcc main.c && ./a.out
+´´´
