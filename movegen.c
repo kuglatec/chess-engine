@@ -33,7 +33,8 @@ int wchecker(int i, struct Square* sqs, struct Piece* ps, struct Move m, int pla
     } 
     return 1;
 }
-int queenValid(struct Move m, struct Piece* ps, int player, int opponent) {
+int queenValid(struct Move m, struct Piece* ps, int pl, int opponent) {
+    const int player = pl; /*somehow, the player variable is changing so it is now a const*/
     /*if piece is captured, controlled by opponent or doesnt move, abort*/
     if ((m.startY == m.destY && m.startX == m.destX) || ps[m.pieceID].captured == 1 || ps[m.pieceID].owner != player) {
         return 0;
@@ -365,8 +366,8 @@ int rookValid(struct Move m, struct Piece* ps, int player, int opponent) {
     return 0;
 }
 
-int bishopValid(struct Move m, struct Piece* ps, const int player, int opponent) {
-    
+int bishopValid(struct Move m, struct Piece* ps, const int pl, int opponent) {
+    const int player = pl; /*somehow, the player variable is changing so it is now a const*/
 /*if piece is captured, controlled by opponent or doesnt move, abort*/
     if ((m.startY == m.destY && m.startX == m.destX) || ps[m.pieceID].captured == 1 || ps[m.pieceID].owner == opponent) {
       //  printf("error here");
@@ -399,6 +400,7 @@ int bishopValid(struct Move m, struct Piece* ps, const int player, int opponent)
         else if (m.destX < m.startX && m.destY > m.startY) { /*piece moves left up*/
          //   printf("test");
             struct Square sqs[m.startX - m.destX]; /*allocate memory*/
+            printf("\nPLAYERS: %d\n", player);
             for (s = m.startY; i <= m.destY - m.startY; s++) {
                 sqs[i].y = s;
                 //printf("\nY: %d\n", sqs[i].y);
@@ -407,7 +409,6 @@ int bishopValid(struct Move m, struct Piece* ps, const int player, int opponent)
                 //printf("INDEX: %d\n", i);
                 i++;
             }
-            printf("\nPLAYERS: %d\n", player);
             for (int j = 0; j < i; j++) {
              //   printf("\n%d/%d\n", sqs[i].x, sqs[i].y);
             }
