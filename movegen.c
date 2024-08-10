@@ -22,7 +22,6 @@ int wchecker(int i, struct Square* sqs, struct Piece* ps, struct Move m, int pla
         if (!(sqs[j].x == m.startX && sqs[j].y == m.startY)) {
             for (p = 0; p < 32; p++) {
                 if (ps[p].xpos == sqs[j].x && ps[p].ypos == sqs[j].y && ps[p].captured == 0) {
-                    printf("pas: %d\n", player);
                   //  printf("\n%d/%d\n", sqs[j].x, sqs[j].y);
                      if (!(ps[p].ypos == m.destY && ps[p].xpos == m.destX) || ((ps[p].xpos == m.destX && ps[p].ypos == m.destY) && ps[p].owner == player)) {
                             return 0; 
@@ -366,14 +365,17 @@ int rookValid(struct Move m, struct Piece* ps, int player, int opponent) {
     return 0;
 }
 
-int bishopValid(struct Move m, struct Piece* ps, const int pl, int opponent) {
+int bishopValid(struct Move m, struct Piece* ps, const int pl, int op) {
+    const int opponent = op;
     const int player = pl; /*somehow, the player variable is changing so it is now a const*/
+    
 /*if piece is captured, controlled by opponent or doesnt move, abort*/
-    if ((m.startY == m.destY && m.startX == m.destX) || ps[m.pieceID].captured == 1 || ps[m.pieceID].owner == opponent) {
+    if ((m.startY == m.destY && m.startX == m.destX) || ps[m.pieceID].captured == 1 || ps[m.pieceID].owner != player) {
       //  printf("error here");
+        printf("\nPLAYER: %d PID:%d\n", ps[m.pieceID].owner, m.pieceID);
         return 0;
     }    
-    printf("\nPLAYER: %d\n", player);
+    
     if (abs(m.destX - m.startX) == abs(m.destY - m.startY)) { /*check if piece moves on a diagonal*/
         int i = 0; /*index for sqs array*/
         int s; /*integet holding temp. square*/
@@ -400,7 +402,6 @@ int bishopValid(struct Move m, struct Piece* ps, const int pl, int opponent) {
         else if (m.destX < m.startX && m.destY > m.startY) { /*piece moves left up*/
          //   printf("test");
             struct Square sqs[m.startX - m.destX]; /*allocate memory*/
-            printf("\nPLAYERS: %d\n", player);
             for (s = m.startY; i <= m.destY - m.startY; s++) {
                 sqs[i].y = s;
                 //printf("\nY: %d\n", sqs[i].y);
@@ -412,7 +413,6 @@ int bishopValid(struct Move m, struct Piece* ps, const int pl, int opponent) {
             for (int j = 0; j < i; j++) {
              //   printf("\n%d/%d\n", sqs[i].x, sqs[i].y);
             }
-            printf("\nPLAYER: %d\n", player);
             return wchecker(i, sqs, ps, m, player, opponent);
         
         }
@@ -432,9 +432,16 @@ int bishopValid(struct Move m, struct Piece* ps, const int pl, int opponent) {
     return 0;
 }
 
-int mValid(struct Move m, struct Piece* ps, const int player) { /*function to validate moves*/
-   int opponent = abs(player - 1); /*if player is 1: opponent is 0 and vice versa*/
-   
+int mValid(struct Move m, struct Piece* ps, const int pl) { /*function to validate moves*/
+   const int player = pl;
+   int oopponent;
+   if (player == 0) {
+        oopponent = 1;
+   }
+   else {
+        oopponent = 0;
+   }
+   const int opponent = oopponent;
    struct Piece p = ps[m.pieceID];
    if (p.xpos != m.startX || p.ypos != m.startY) {
     printf("\n\nError: piece not initalized\n\n"); /*error handler*/
@@ -452,7 +459,6 @@ int mValid(struct Move m, struct Piece* ps, const int player) { /*function to va
         return knightValid(m, ps, player, opponent);
     
     case 3:
-        printf("KK: %d\n", player);
         return bishopValid(m, ps, player, opponent);
     
     case 4:
@@ -547,9 +553,10 @@ int eval(struct Piece* ps, int player) {
                 mv.startY = ps[p].ypos;
                 mv.destX = kqs[i].x;
                 mv.destY = kqs[i].y;
+                printf("\n%d/%d\n", mv.destX, mv.destY);
                 mv.pieceID = p;
                 if (mValid(mv, ps, player) == 1) {
-                    //score = score + 1;
+                    score = score + 1;
                   //  printf("\n\nPIECEID: %d\n\n", p);
                 }
             }
@@ -570,7 +577,6 @@ int eval(struct Piece* ps, int player) {
                 mv.pieceID = p;
                 if (mValid(mv, ps, player) == 1) {
                     score = score + 1;
-                    printf("\n\nPIECEID: %d: %d/%d-%d/%d\n\n", p, mv.startX, mv.startY, mv.destX, mv.destY);
                 }
             }
         }
