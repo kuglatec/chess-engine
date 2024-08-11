@@ -615,6 +615,49 @@ int eval(struct Piece* ps, int player) {
 }
 
 
+/*struct Move minimax(struct Piece* ps, const int pl, const int depth) {
+    const int player = pl;
+    int op;
+    if (player == 1) {
+        op = 0;
+    }
+    else if (player == 0) {
+        op = 1;
+    }
+    const int opponent = op;
+
+
+
+}
+*/
+
+struct Piece* makeMove(struct Move mv, struct Piece* ps, int player) {
+    ps[mv.pieceID].xpos = mv.destX;
+    ps[mv.pieceID].ypos = mv.destY;
+    ps[mv.pieceID].moved = 1;
+    for (int p = 0; p < 32; p++) {
+        if (ps[p].xpos == mv.destX && ps[p].ypos == mv.destY && ps[p].captured == 0) {
+            ps[p].captured = 1; /*piece gets captured*/
+            ps[mv.pieceID].xpos = mv.destX;
+            ps[mv.pieceID].ypos = mv.destY;
+            ps[mv.pieceID].moved = 1;
+        }
+
+    }
+    if (ps[mv.pieceID].type == 5 && mv.destX == mv.startX + 2) {
+        for (int p = 0; p < 32; p++) {
+            if (ps[p].xpos == mv.startX + 3 && ps[p].ypos == mv.startY) {
+                ps[mv.pieceID].xpos = mv.destX;
+                ps[mv.pieceID].moved = 1;
+                ps[p].xpos = ps[mv.pieceID].xpos + 1;
+                ps[p].moved = 1;
+            }
+        }
+    }
+    return ps;
+
+}
+
 struct Move* getMoves(struct Piece* ps, int player) {
      struct Move mv;
      struct Move* mvs = (struct Move*)calloc(256, sizeof(struct Move)); /*array of valid moves*/
@@ -636,6 +679,7 @@ struct Move* getMoves(struct Piece* ps, int player) {
             }
         }
     }
+    return mvs;
 }
 
 
