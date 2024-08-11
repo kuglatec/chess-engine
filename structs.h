@@ -4,6 +4,7 @@ struct Move{
    int startY; /*inital postion at the Y axis*/
    int destX; /*destination at X axis*/
    int destY; /*destination at Y axis*/
+   int arlen; /*length identifier for arrays*/
 };
 
 struct Piece{
