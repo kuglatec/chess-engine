@@ -638,24 +638,26 @@ struct Piece* makeMove(struct Move mv, struct Piece* ps, int player) {
     for (int p = 0; p < 32; p++) {
         if (ps[p].xpos == mv.destX && ps[p].ypos == mv.destY && ps[p].captured == 0) {
             ps[p].captured = 1; /*piece gets captured*/
-            ps[mv.pieceID].xpos = mv.destX;
-            ps[mv.pieceID].ypos = mv.destY;
-            ps[mv.pieceID].moved = 1;
         }
 
     }
     if (ps[mv.pieceID].type == 5 && mv.destX == mv.startX + 2) {
         for (int p = 0; p < 32; p++) {
             if (ps[p].xpos == mv.startX + 3 && ps[p].ypos == mv.startY) {
-                ps[mv.pieceID].xpos = mv.destX;
-                ps[mv.pieceID].moved = 1;
+                ps[p].xpos = ps[mv.pieceID].xpos + 1;
+                ps[p].moved = 1;
+            }
+        }
+    }
+    else if (ps[mv.pieceID].type == 5 && mv.destX == mv.startX - 2) {
+        for (int p = 0; p < 32; p++) {
+            if (ps[p].xpos == mv.startX - 4 && ps[p].ypos == mv.startY && ps[p].owner == ps[mv.pieceID].owner) {
                 ps[p].xpos = ps[mv.pieceID].xpos + 1;
                 ps[p].moved = 1;
             }
         }
     }
     return ps;
-
 }
 
 struct Move* getMoves(struct Piece* ps, int player) {
@@ -697,7 +699,7 @@ for (int i = 0; i < 8; i++) {
     ps[i].captured = 0;
     ps[i].moved = 0;
     ps[i].xpos = i + 1;
-    ps[i].ypos = 3;
+    ps[i].ypos = 2;
 }
 
 // Rooks
