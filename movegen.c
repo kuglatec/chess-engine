@@ -1,5 +1,7 @@
+
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "structs.h"
 /*init values for pieces in decipawns*/
 #define QUEEN 90 
@@ -614,8 +616,31 @@ int eval(struct Piece* ps, int player) {
 
 }
 
+struct Move* getMoves(struct Piece* ps, int player) {
+     struct Move mv;
+     struct Move* mvs = (struct Move*)calloc(256, sizeof(struct Move)); /*array of valid moves*/
+     int nom = 0; /*number of moves*/
+     for (int p = 0; p < 32; p++) {
+        for (int x = 1; x < 9; x++) {
+            for (int y = 1; y < 9; y++) {
+                mv.startX = ps[p].xpos;
+                mv.startY = ps[p].ypos;
+                mv.destX = x;
+                mv.destY = y;
+                mv.pieceID = p;
+                printf("\n%d", mv.pieceID);
+                if (mValid(mv, ps, player) == 1) {
+                    mvs[nom] = mv;
+                    nom++;
+                }
+                mvs[0].arlen = nom;
+            }
+        }
+    }
+    return mvs;
+}
 
-/*struct Move minimax(struct Piece* ps, const int pl, const int depth) {
+struct Move minimax(struct Piece* ps, const int pl, const int depth) {
     const int player = pl;
     int op;
     if (player == 1) {
@@ -626,10 +651,20 @@ int eval(struct Piece* ps, int player) {
     }
     const int opponent = op;
 
+    struct State states[256];
+    struct Move* pmvs = getMoves(ps, player);
+    struct Piece tmpps[32];
+    for (int i = 0; i < 256; i++) {
+        states[i].m = pmvs[i];
+    }
+    for (int i = 0; i < 256; i++) {
+        memcpy(tmpps, ps, sizeof(*ps));
+    }
 
 
+    return pmvs[0];
 }
-*/
+
 
 struct Piece* makeMove(struct Move mv, struct Piece* ps, int player) {
     ps[mv.pieceID].xpos = mv.destX;
@@ -660,29 +695,7 @@ struct Piece* makeMove(struct Move mv, struct Piece* ps, int player) {
     return ps;
 }
 
-struct Move* getMoves(struct Piece* ps, int player) {
-     struct Move mv;
-     struct Move* mvs = (struct Move*)calloc(256, sizeof(struct Move)); /*array of valid moves*/
-     int nom = 0; /*number of moves*/
-     for (int p = 0; p < 32; p++) {
-        for (int x = 1; x < 9; x++) {
-            for (int y = 1; y < 9; y++) {
-                mv.startX = ps[p].xpos;
-                mv.startY = ps[p].ypos;
-                mv.destX = x;
-                mv.destY = y;
-                mv.pieceID = p;
-                printf("\n%d", mv.pieceID);
-                if (mValid(mv, ps, player) == 1) {
-                    mvs[nom] = mv;
-                    nom++;
-                }
-                mvs[0].arlen = nom;
-            }
-        }
-    }
-    return mvs;
-}
+
 
 
 struct Piece* loadpieces() {
@@ -707,6 +720,12 @@ ps[8].type = 1; // Rook
 ps[8].owner = 0; // White
 ps[8].captured = 0;
 ps[8].moved = 0;
+ps[8].xpos = 1;
+ps[8].ypos = 1;
+
+ps[9].type = 1; // Rook
+ps[9].owner = 0; // White
+ps[9].captured = 0;
 ps[8].xpos = 1;
 ps[8].ypos = 1;
 
