@@ -639,33 +639,6 @@ struct Move* getMoves(struct Piece* ps, int player) {
     }
     return mvs;
 }
-
-struct Move minimax(struct Piece* ps, const int pl, const int depth) {
-    const int player = pl;
-    int op;
-    if (player == 1) {
-        op = 0;
-    }
-    else if (player == 0) {
-        op = 1;
-    }
-    const int opponent = op;
-
-    struct State states[256];
-    struct Move* pmvs = getMoves(ps, player);
-    struct Piece tmpps[32];
-    for (int i = 0; i < 256; i++) {
-        states[i].m = pmvs[i];
-    }
-    for (int i = 0; i < 256; i++) {
-        memcpy(tmpps, ps, sizeof(*ps));
-    }
-
-
-    return pmvs[0];
-}
-
-
 struct Piece* makeMove(struct Move mv, struct Piece* ps, int player) {
     ps[mv.pieceID].xpos = mv.destX;
     ps[mv.pieceID].ypos = mv.destY;
@@ -694,6 +667,32 @@ struct Piece* makeMove(struct Move mv, struct Piece* ps, int player) {
     }
     return ps;
 }
+struct State* getstates(struct Piece* ps, const int pl, const int depth) {
+    const int player = pl;
+    int op;
+    if (player == 1) {
+        op = 0;
+    }
+    else if (player == 0) {
+        op = 1;
+    }
+    const int opponent = op;
+
+    struct State* states = (struct State*)calloc(256, sizeof(struct State));
+    struct Move* pmvs = getMoves(ps, player);
+    for (int i = 0; i < pmvs[0].arlen; i++) {
+        states[i].m = pmvs[i];
+        memcpy(states[i].ps, ps, sizeof(*ps)); /*create a temporary instance of pieces for testing moves without affecting the main set*/
+        makeMove(states[i].m, states[i].ps, player);
+        states[i].score = eval(states[i].ps, player);
+    }
+
+
+    return states;
+}
+
+
+
 
 
 
