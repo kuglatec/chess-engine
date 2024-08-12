@@ -20,3 +20,8 @@ struct Square {
     int x;
     int y;
 };
+
+struct State {
+    struct Piece ps[32];
+    struct Move m;
+};
