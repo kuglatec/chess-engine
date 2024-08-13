@@ -667,7 +667,7 @@ struct Piece* makeMove(struct Move mv, struct Piece* ps, int player) {
     }
     return ps;
 }
-struct State* getstates(struct Piece* ps, const int pl, const int depth) {
+struct State* getstates(struct Piece* ps, const int pl, const int depth) { /*function for getting game "states" aka nodes of a specific position that will later be used in a tree for minimax*/
     const int player = pl;
     int op;
     if (player == 1) {
@@ -682,11 +682,13 @@ struct State* getstates(struct Piece* ps, const int pl, const int depth) {
     struct Move* pmvs = getMoves(ps, player);
     for (int i = 0; i < pmvs[0].arlen; i++) {
         states[i].m = pmvs[i];
-        memcpy(states[i].ps, ps, sizeof(*ps)); /*create a temporary instance of pieces for testing moves without affecting the main set*/
+    //    memcpy(states[i].ps, ps, sizeof(*ps)); /*create a temporary instance of pieces for testing moves without affecting the main set*/
+        for (int p = 0; p < 32; p++) {
+            states[i].ps[p] = ps[p];
+        }
         makeMove(states[i].m, states[i].ps, player);
         states[i].score = eval(states[i].ps, player);
     }
-
 
     return states;
 }
