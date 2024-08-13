@@ -1,7 +1,6 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 #include "structs.h"
 /*init values for pieces in decipawns*/
 #define QUEEN 90 
@@ -667,6 +666,9 @@ struct Piece* makeMove(struct Move mv, struct Piece* ps, int player) {
     }
     return ps;
 }
+
+
+
 struct State* getstates(struct Piece* ps, const int pl, const int depth) { /*function for getting game "states" aka nodes of a specific position that will later be used in a tree for minimax*/
     const int player = pl;
     int op;
@@ -679,6 +681,7 @@ struct State* getstates(struct Piece* ps, const int pl, const int depth) { /*fun
     const int opponent = op;
 
     struct State* states = (struct State*)calloc(256, sizeof(struct State));
+    states[0].stlen = 0;
     struct Move* pmvs = getMoves(ps, player);
     for (int i = 0; i < pmvs[0].arlen; i++) {
         states[i].m = pmvs[i];
@@ -688,7 +691,10 @@ struct State* getstates(struct Piece* ps, const int pl, const int depth) { /*fun
         }
         makeMove(states[i].m, states[i].ps, player);
         states[i].score = eval(states[i].ps, player);
+        states[0].stlen++;
+        
     }
+    printf("\nSTLEN: %d\n\n", states[0].stlen);
 
     return states;
 }
@@ -697,7 +703,14 @@ struct State* getstates(struct Piece* ps, const int pl, const int depth) { /*fun
 
 
 
-
+int treeBuilder(struct State rootNode, int player) { /*the player is the one who has to move*/
+    struct State* states = getstates(rootNode.ps, player, 0);
+    for (int i = 0; i < states[0].stlen; i++) {
+        rootNode.children[i] = &states[i];
+    }
+    rootNode.nchildren = states[0].stlen;
+    return 0;
+}
 
 struct Piece* loadpieces() {
     struct Piece* ps = (struct Piece*)calloc(32, sizeof(struct Piece)); /*allocate memory for 32 pieces*/
