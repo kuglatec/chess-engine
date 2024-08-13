@@ -22,6 +22,10 @@ struct Square {
 };
 
 struct State {
+    int stlen; /*length of the returned states array*/
     struct Piece ps[32];
     struct Move m;
+    int score;
+    int nchildren; /*number of children nodes*/
+    struct State* children[256]; /*initialize pointer array to other children of type State*/
 };
