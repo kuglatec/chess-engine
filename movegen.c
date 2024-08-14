@@ -601,6 +601,7 @@ int eval(struct Piece* ps, int player) {
                 mv.pieceID = p;
                 char testr[32];
                 printf("\n%d", mv.pieceID);
+              //  system("clear");
                 if (mValid(mv, ps, player) == 1) {
                     score = score + 1;
                 }
@@ -671,6 +672,8 @@ struct Piece* makeMove(struct Move mv, struct Piece* ps, int player) {
 
 
 
+
+
 struct State* getstates(struct Piece* ps, const int pl, const int depth) { /*function for getting game "states" aka nodes of a specific position that will later be used in a tree for minimax*/
     const int player = pl;
     
@@ -710,6 +713,28 @@ int treeBuilder(struct State *rootNode, int player) { /*the player is the one wh
     rootNode->stlen = getMoves(rootNode->ps, 0)[0].arlen;
     for (int i = 0; i < rootNode->stlen; i++) {
         rootNode->children[i] = &states[i];
+    }
+    return 0;
+}
+
+int buildFullTree(struct State *rootNode, const int pl, int depth) {
+    int op = 0;
+    if (pl == 0) {
+            op = 1;
+    }
+    const int opponent = op;
+    const int player = pl;
+
+
+    if (depth > 0) {
+        treeBuilder(rootNode, player);
+        depth--;
+        for (int node = 0; node < rootNode->stlen; node++) {
+         //   treeBuilder(rootNode->children[node], opponent);
+         buildFullTree(rootNode->children[node], opponent, depth);
+
+        }
+
     }
     return 0;
 }
