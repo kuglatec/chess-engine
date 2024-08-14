@@ -18,17 +18,11 @@ int main() {
     rootNode.ps[i] = ps[i];
    }
    
-   treeBuilder(&rootNode, 0);
+  printf("\n%dd\n", buildFullTree(&rootNode, 0, 3));
 
   // printf("\n\n%d\n", rootNode.ps[0].ypos);
     //printf("\n%d\n", eval(states[0].ps, 0));
-    for (int p = 0; p < rootNode.stlen; p++) {
-   //   printf("\nX:%d\nY:%d\n", states[0].ps[p].xpos, states[0].ps[p].ypos);
-        treeBuilder(rootNode.children[p], 1);
-        for (int g = 0; g < rootNode.stlen; g++) {
-          treeBuilder(rootNode.children[p]->children[g], 0);
-        }
-   }
+    
   //  printf("\n%d\n", states[0].score);
  // printf("\n%d\n", eval(ps, 0));
     //printf("\nARLEN: %d\n", mvs[0].arlen); 
