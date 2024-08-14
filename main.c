@@ -14,13 +14,20 @@ int main() {
  //   printf("\nL:%d\n", states[0].m.destY);
     //printf("\n%d\n", states[0].score);
    struct State rootNode;
-   struct State* states = getstates(ps, 0, 0);
-   rootNode = states[0];
-   treeBuilder(rootNode, 0);
-   printf("\n\n%d\n", states[0].stlen);
+   for (int i = 0; i < 32; i++) {
+    rootNode.ps[i] = ps[i];
+   }
+   
+   treeBuilder(&rootNode, 0);
+
+  // printf("\n\n%d\n", rootNode.ps[0].ypos);
     //printf("\n%d\n", eval(states[0].ps, 0));
-    for (int p = 0; p < 32; p++) {
+    for (int p = 0; p < rootNode.stlen; p++) {
    //   printf("\nX:%d\nY:%d\n", states[0].ps[p].xpos, states[0].ps[p].ypos);
+        treeBuilder(rootNode.children[p], 1);
+        for (int g = 0; g < rootNode.stlen; g++) {
+          treeBuilder(rootNode.children[p]->children[g], 0);
+        }
    }
   //  printf("\n%d\n", states[0].score);
  // printf("\n%d\n", eval(ps, 0));
