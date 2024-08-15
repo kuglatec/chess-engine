@@ -28,4 +28,5 @@ struct State { /*struct for nodes*/
     int score; /*score after move*/
     int bscore; /*score before move*/
     struct State* children[256]; /*initialize pointer array to other children of type State*/
+    int dead;
 };
