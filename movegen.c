@@ -9,7 +9,8 @@
 #define KNIGHT 30
 #define BISHOP 32
 #define KING 10000
-
+#define PRUNING_START 4
+#define MIN_ADVANTAGE 2
 struct Square kqs[2]; /*keysquares (D & E 4 or D & E 5)*/
 struct Square iqs[2]; /*important squares (C & F 4 or C & F 5)*/
 
@@ -687,7 +688,6 @@ struct State* getstates(struct Piece* ps, const int pl, const int depth) { /*fun
     const int opponent = op;
 
     struct State* states = (struct State*)calloc(256, sizeof(struct State));
-    states[0].stlen = 0;
     struct Move* pmvs = getMoves(ps, player);
     for (int i = 0; i < pmvs[0].arlen; i++) {
         states[i].m = pmvs[i];
@@ -695,9 +695,9 @@ struct State* getstates(struct Piece* ps, const int pl, const int depth) { /*fun
         for (int p = 0; p < 32; p++) {
             states[i].ps[p] = ps[p];
         }
+        states[i].bscore = eval(states[i].ps, player);
         makeMove(states[i].m, states[i].ps, player);
         states[i].score = eval(states[i].ps, player);
-        states[0].stlen++;
         
     }
 
@@ -708,10 +708,10 @@ struct State* getstates(struct Piece* ps, const int pl, const int depth) { /*fun
 
 
 
-int treeBuilder(struct State *rootNode, int player) { /*the player is the one who has to move*/
+int treeBuilder(struct State *rootNode, int player, int prune) { 
     struct State* states = getstates(rootNode->ps, player, 0);
     rootNode->stlen = getMoves(rootNode->ps, 0)[0].arlen;
-    for (int i = 0; i < rootNode->stlen; i++) {
+    for (int i = 0; i < rootNode->stlen/* && states[i].score - states[i].bscore > MIN_ADVANTAGE*/; i++) {
         rootNode->children[i] = &states[i];
     }
     return 0;
@@ -719,19 +719,24 @@ int treeBuilder(struct State *rootNode, int player) { /*the player is the one wh
 
 int buildFullTree(struct State *rootNode, const int pl, int depth) {
     int op = 0;
+
     if (pl == 0) {
             op = 1;
+    }
+    int prune = 0;
+    if (depth > PRUNING_START) {
+        int prune = 1; /*if the depth is bigger than PRUNING-START, the function should use alpha beta pruning to optimize its time usage*/
     }
     const int opponent = op;
     const int player = pl;
 
 
     if (depth > 0) {
-        treeBuilder(rootNode, player);
+        treeBuilder(rootNode, player, prune); /*the prune value is then given to the treeBuilder to ignore bad branches*/
         depth--;
         for (int node = 0; node < rootNode->stlen; node++) {
          //   treeBuilder(rootNode->children[node], opponent);
-         buildFullTree(rootNode->children[node], opponent, depth);
+         buildFullTree(rootNode->children[node], opponent, depth); /*recursively call this function to continue building new branches*/
 
         }
 
