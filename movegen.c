@@ -617,29 +617,7 @@ int eval(struct Piece* ps, int player) {
 
 }
 
-struct Move* getMoves(struct Piece* ps, int player) {
-     struct Move mv;
-     struct Move* mvs = (struct Move*)calloc(256, sizeof(struct Move)); /*array of valid moves*/
-     int nom = 0; /*number of moves*/
-     for (int p = 0; p < 32; p++) {
-        for (int x = 1; x < 9; x++) {
-            for (int y = 1; y < 9; y++) {
-                mv.startX = ps[p].xpos;
-                mv.startY = ps[p].ypos;
-                mv.destX = x;
-                mv.destY = y;
-                mv.pieceID = p;
-                printf("\n%d", mv.pieceID);
-                if (mValid(mv, ps, player) == 1) {
-                    mvs[nom] = mv;
-                    nom++;
-                }
-                mvs[0].arlen = nom;
-            }
-        }
-    }
-    return mvs;
-}
+
 struct Piece* makeMove(struct Move mv, struct Piece* ps, int player) {
     ps[mv.pieceID].xpos = mv.destX;
     ps[mv.pieceID].ypos = mv.destY;
@@ -671,7 +649,45 @@ struct Piece* makeMove(struct Move mv, struct Piece* ps, int player) {
 
 
 
+int testmove(struct Piece* ps, struct Move mv, int player) {
+    struct Piece* pps = (struct Piece*)calloc(32, sizeof(struct Piece)); /*allocate memory for 32 pieces*/
+    for (int p = 0; p < 32; p++) {
+            pps[p] = ps[p];
+        }
+        int bscore = eval(pps, player);
+        makeMove(mv, pps, player);
+        int score = eval(pps, player);
+        int abscore = score - bscore;
+        free(pps); /*free temporary ps array*/
+        return abscore;
+}
 
+struct Move* getMoves(struct Piece* ps, int player) {
+     struct Move mv;
+     struct Move* mvs = (struct Move*)calloc(256, sizeof(struct Move)); /*array of valid moves*/
+     int nom = 0; /*number of moves*/
+     for (int p = 0; p < 32; p++) {
+        for (int x = 1; x < 9; x++) {
+            for (int y = 1; y < 9; y++) {
+                mv.startX = ps[p].xpos;
+                mv.startY = ps[p].ypos;
+                mv.destX = x;
+                mv.destY = y;
+                mv.pieceID = p;
+                printf("\n%d", mv.pieceID);
+                //printf("\nnom: %d\n", testmove(ps, mv, player));
+                if (mValid(mv, ps, player) == 1/* && testmove(ps, mv, player) > MIN_ADVANTAGE*/) {
+                    mvs[nom] = mv;
+                    nom++;
+                    printf("test");
+                    
+                }
+                mvs[0].arlen = nom;
+            }
+        }
+    }
+    return mvs;
+}
 
 
 
@@ -698,6 +714,10 @@ struct State* getstates(struct Piece* ps, const int pl, const int depth) { /*fun
         states[i].bscore = eval(states[i].ps, player);
         makeMove(states[i].m, states[i].ps, player);
         states[i].score = eval(states[i].ps, player);
+        states[i].dead = 0;
+        if (!(states[i].bscore - states[i].score > MIN_ADVANTAGE)) {
+            states[i].dead = 1;
+        }
         
     }
 
