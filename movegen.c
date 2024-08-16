@@ -138,7 +138,7 @@ int pawnValid(struct Move m, struct Piece* ps, int player, int opponent) {
     if (m.startY == m.destY || ps[m.pieceID].captured == 1 || ps[m.pieceID].owner == opponent) {
         return 0;
     }
-    
+    if (player == 0) {
     if (m.destY == m.startY + 2 && m.destX == m.startX && ps[m.pieceID].moved == 0) {
         int i;
         for (i = 0; i < 32; i++) {
@@ -184,7 +184,51 @@ int pawnValid(struct Move m, struct Piece* ps, int player, int opponent) {
             return 0; /*No piece to capture: invalid move*/
         }
     }
+    }
+    else if (player == 1) {
+        if (m.destY == m.startY - 2 && m.destX == m.startX && ps[m.pieceID].moved == 0) {
+    int i;
+    for (i = 0; i < 32; i++) {
+        if (ps[i].xpos == m.startX && i != m.pieceID) { /*make sure only other pieces are searched*/
+            if(ps[i].ypos == m.startY - 1 || ps[i].ypos == m.destY) {
+                return 0; /*move invalid: blocked by other piece*/
+            }
+        }
+    }
+    return 1; /*move valid: pawn moves 2 squares forward*/ 
+}
+else if (m.destY == m.startY - 1 && m.destX == m.startX) {
+    int i;
+    for (i = 0; i < 32; i++) {
+        if (ps[i].xpos == m.startX && i != m.pieceID && ps[i].ypos == m.destY && ps[i].captured == 0) {
+            return 0; /*move invalid: blocked by other piece*/
+        }
+    }
+    return 1; /*move valid: pawn moves 1 square forward*/ 
+}
+else if (m.destY == m.startY - 1 && m.startX != m.destX) {
+    if (m.destX == m.startX + 1) { /*pawn captures right*/
+        int i;
+        for (i = 0; i < 32; i++) {
+            if (ps[i].xpos == m.destX && ps[i].ypos == m.destY && ps[i].captured == 0 && ps[i].owner == opponent) {
+                return 1; /*capture piece on right*/
+            }
+        }  
+    }
+    else if (m.destX == m.startX - 1) { /*pawn captures left*/
+        int i;
+        for (i = 0; i < 32; i++) {
+            if (ps[i].xpos == m.destX && ps[i].ypos == m.destY && ps[i].captured == 0 && ps[i].owner == opponent) {
+                return 1; /*capture piece on left*/
+            }
+        }  
+    }
+    else {
+        return 0; /*No piece to capture: invalid move*/
+    }
+}
 
+    }
     return 0; /*none of the cases aboove applied: invalid move*/
 }
 
@@ -724,7 +768,7 @@ int treeBuilder(struct State *rootNode, int player, int prune) {
     if (states[i].score - states[i].bscore > MIN_ADVANTAGE) {
         nstlen++;
     }
-    //printf("\nX:%d\nY:%d\nST: %d\nNST:%d\n", states[i].m.pieceID, states[i].m.destY, rootNode->stlen, states[i].score - states[i].bscore);
+   // printf("\nX:%d\nY:%d\nST: %d\nNST:%d\n", states[i].m.pieceID, states[i].m.destY, rootNode->stlen, states[i].score - states[i].bscore);
    }
     return 0;
 }
