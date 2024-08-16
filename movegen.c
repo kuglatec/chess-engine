@@ -1,6 +1,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <ctype.h>
 #include "structs.h"
 /*init values for pieces in decipawns*/
 #define QUEEN 90 
@@ -635,7 +636,7 @@ int eval(struct Piece* ps, int player) {
     
 
     
- /*   for (int p = 0; p < 32; p++) {
+    for (int p = 0; p < 32; p++) {
         for (int x = 1; x < 9; x++) {
             for (int y = 1; y < 9; y++) {
                 mv.startX = ps[p].xpos;
@@ -651,7 +652,7 @@ int eval(struct Piece* ps, int player) {
                 }
             }
         }
-   }*/ 
+   }
     
     opscore = materialCounter(ops);
     score = score - opscore;
@@ -666,8 +667,9 @@ struct Piece* makeMove(struct Move mv, struct Piece* ps, int player) {
     ps[mv.pieceID].ypos = mv.destY;
     ps[mv.pieceID].moved = 1;
     for (int p = 0; p < 32; p++) {
-        if (ps[p].xpos == mv.destX && ps[p].ypos == mv.destY && ps[p].captured == 0) {
+        if (ps[p].xpos == mv.destX && ps[p].ypos == mv.destY && ps[p].captured == 0 && ps[p].owner != player) { /*workaround fix*/
             ps[p].captured = 1; /*piece gets captured*/
+            printf("\nPiece no: %d\n", mv.pieceID);
         }
 
     }
@@ -754,6 +756,45 @@ struct State* getstates(struct Piece* ps, const int pl, const int depth) { /*fun
 }
 
 
+void fillPiecesFromFEN(struct Piece* ps, const char *fen, int player) {
+    int x = 0, y = 0;  
+    int piece_count = 0;  
+
+    for (const char *p = fen; *p != '\0'; p++) {
+        if (*p == '/') {
+            y++;  
+            x = 0;  
+        } else if (isdigit(*p)) {
+            x += *p - '0';  
+        } else {
+            int isWhite = isupper(*p);
+            int owner = isWhite ? 0 : 1;
+
+            if (owner == player && piece_count < 32) {
+                ps[piece_count].owner = owner;
+                ps[piece_count].captured = 0;
+                ps[piece_count].moved = 0;
+                ps[piece_count].xpos = x;
+                ps[piece_count].ypos = y;
+
+                char c = tolower(*p);  
+                switch (c) {
+                    case 'p': ps[piece_count].type = 0; break;   
+                    case 'r': ps[piece_count].type = 1; break;  
+                    case 'n': ps[piece_count].type = 2; break;  
+                    case 'b': ps[piece_count].type = 3; break;  
+                    case 'q': ps[piece_count].type = 4; break;  
+                    case 'k': ps[piece_count].type = 5; break;  
+                }
+
+                piece_count++;  
+            }
+            x++;  
+        }
+
+        if (y >= 8) break;
+    }
+}
 
 
 
@@ -768,7 +809,7 @@ int treeBuilder(struct State *rootNode, int player, int prune) {
     if (states[i].score - states[i].bscore > MIN_ADVANTAGE) {
         nstlen++;
     }
-   // printf("\nX:%d\nY:%d\nST: %d\nNST:%d\n", states[i].m.pieceID, states[i].m.destY, rootNode->stlen, states[i].score - states[i].bscore);
+  //  printf("\nX:%d\nY:%d\nST: %d\nNST:%d\n", states[i].m.destX, states[i].m.destY, rootNode->stlen, states[i].score - states[i].bscore);
    }
     return 0;
 }
