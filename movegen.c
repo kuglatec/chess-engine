@@ -301,7 +301,7 @@ if (m.startY == m.destY && ps[m.pieceID].moved == 0 && (ps[m.pieceID].ypos == 1 
             //printf("mv.pieceID = %d;\n", mv.pieceID); 
             //printf("\n\nBEFOREID: %d\n\nDEST: %d%d\n----", mv.pieceID, mv.destX, mv.destY);
             if (mValid(mv, ps, 1) == 1) {
-                printf("\nPiece no %d\n", mv.pieceID);
+              //  printf("\nPiece no %d\n", mv.pieceID);
                 return 0;
             }
           //  printf("\n\nAFTER\n\n");
@@ -553,7 +553,6 @@ int eval(struct Piece* ps, int player) {
         noKey = 1;
     }
     struct Move mv;
-    printf("nokey: %d\n", noKey);
     for (int i = 0; i < 2; i++) {
         printf("");
     }
@@ -564,7 +563,7 @@ int eval(struct Piece* ps, int player) {
                 mv.startY = ps[p].ypos;
                 mv.destX = kqs[i].x;
                 mv.destY = kqs[i].y;
-                printf("\n%d/%d\n", mv.destX, mv.destY);
+             //   printf("\n%d/%d\n", mv.destX, mv.destY);
                 mv.pieceID = p;
                 if (mValid(mv, ps, player) == 1) {
                     score = score + 1;
@@ -577,7 +576,7 @@ int eval(struct Piece* ps, int player) {
                 mv.startY = ps[p].ypos;
                 mv.destX = iqs[i].x;
                 mv.destY = iqs[i].y;
-                printf("\n%d/%d\n", mv.destX, mv.destY);
+               // printf("\n%d/%d\n", mv.destX, mv.destY);
                 mv.pieceID = p;
                 if (mValid(mv, ps, player) == 1) {
                     score = score + 1;
@@ -592,7 +591,7 @@ int eval(struct Piece* ps, int player) {
     
 
     
-    for (int p = 0; p < 32; p++) {
+ /*   for (int p = 0; p < 32; p++) {
         for (int x = 1; x < 9; x++) {
             for (int y = 1; y < 9; y++) {
                 mv.startX = ps[p].xpos;
@@ -601,14 +600,14 @@ int eval(struct Piece* ps, int player) {
                 mv.destY = y;
                 mv.pieceID = p;
                 char testr[32];
-                printf("\n%d", mv.pieceID);
+              //  printf("\n%d", mv.pieceID);
               //  system("clear");
                 if (mValid(mv, ps, player) == 1) {
                     score = score + 1;
                 }
             }
         }
-    }
+   }*/ 
     
     opscore = materialCounter(ops);
     score = score - opscore;
@@ -648,20 +647,6 @@ struct Piece* makeMove(struct Move mv, struct Piece* ps, int player) {
 }
 
 
-
-int testmove(struct Piece* ps, struct Move mv, int player) {
-    struct Piece* pps = (struct Piece*)calloc(32, sizeof(struct Piece)); /*allocate memory for 32 pieces*/
-    for (int p = 0; p < 32; p++) {
-            pps[p] = ps[p];
-        }
-        int bscore = eval(pps, player);
-        makeMove(mv, pps, player);
-        int score = eval(pps, player);
-        int abscore = score - bscore;
-        free(pps); /*free temporary ps array*/
-        return abscore;
-}
-
 struct Move* getMoves(struct Piece* ps, int player) {
      struct Move mv;
      struct Move* mvs = (struct Move*)calloc(256, sizeof(struct Move)); /*array of valid moves*/
@@ -674,12 +659,12 @@ struct Move* getMoves(struct Piece* ps, int player) {
                 mv.destX = x;
                 mv.destY = y;
                 mv.pieceID = p;
-                printf("\n%d", mv.pieceID);
+             //   printf("\n%d", mv.pieceID);
                 //printf("\nnom: %d\n", testmove(ps, mv, player));
                 if (mValid(mv, ps, player) == 1/* && testmove(ps, mv, player) > MIN_ADVANTAGE*/) {
                     mvs[nom] = mv;
                     nom++;
-                    printf("test");
+              //      printf("test");
                     
                 }
                 mvs[0].arlen = nom;
@@ -730,10 +715,17 @@ struct State* getstates(struct Piece* ps, const int pl, const int depth) { /*fun
 
 int treeBuilder(struct State *rootNode, int player, int prune) { 
     struct State* states = getstates(rootNode->ps, player, 0);
-    rootNode->stlen = getMoves(rootNode->ps, 0)[0].arlen;
+    int nstlen = 0; /*new stlen for pruned array*/
+    rootNode->stlen = getMoves(rootNode->ps, player)[0].arlen;
     for (int i = 0; i < rootNode->stlen/* && states[i].score - states[i].bscore > MIN_ADVANTAGE*/; i++) {
         rootNode->children[i] = &states[i];
     }
+   for (int i = 0; i < rootNode->stlen; i++) {
+    if (states[i].score - states[i].bscore > MIN_ADVANTAGE) {
+        nstlen++;
+    }
+    //printf("\nX:%d\nY:%d\nST: %d\nNST:%d\n", states[i].m.pieceID, states[i].m.destY, rootNode->stlen, states[i].score - states[i].bscore);
+   }
     return 0;
 }
 
