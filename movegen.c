@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <string.h>
 #include "structs.h"
 /*init values for pieces in decipawns*/
 #define QUEEN 90 
@@ -669,7 +670,7 @@ struct Piece* makeMove(struct Move mv, struct Piece* ps, int player) {
     for (int p = 0; p < 32; p++) {
         if (ps[p].xpos == mv.destX && ps[p].ypos == mv.destY && ps[p].captured == 0 && ps[p].owner != player) { /*workaround fix*/
             ps[p].captured = 1; /*piece gets captured*/
-            printf("\nPiece no: %d\n", mv.pieceID);
+          //  printf("\nPiece no: %d/%d|%d/%d\n", mv.pieceID, p, mv.destX, mv.destY);
         }
 
     }
@@ -756,46 +757,65 @@ struct State* getstates(struct Piece* ps, const int pl, const int depth) { /*fun
 }
 
 
-void fillPiecesFromFEN(struct Piece* ps, const char *fen, int player) {
-    int x = 0, y = 0;  
-    int piece_count = 0;  
+struct Piece* loadpiecesFromFEN(const char* fen) {
+    struct Piece* ps = (struct Piece*)calloc(32, sizeof(struct Piece));
+    int white_pawn_index = 0;
+    int white_other_index = 8;
+    int black_pawn_index = 16;
+    int black_other_index = 24;
 
-    for (const char *p = fen; *p != '\0'; p++) {
-        if (*p == '/') {
-            y++;  
-            x = 0;  
-        } else if (isdigit(*p)) {
-            x += *p - '0';  
+    const char* piece_positions = strtok(strdup(fen), " ");
+    int xpos = 1;
+    int ypos = 8;
+
+    for (int i = 0; piece_positions[i] != '\0'; i++) {
+        char c = piece_positions[i];
+
+        if (c == '/') {
+            ypos--;
+            xpos = 1;
+        } else if (c >= '1' && c <= '8') {
+            xpos += c - '0';
         } else {
-            int isWhite = isupper(*p);
-            int owner = isWhite ? 0 : 1;
+            struct Piece p;
+            p.captured = 0;
+            p.moved = 0;
+            p.xpos = xpos++;
+            p.ypos = ypos;
 
-            if (owner == player && piece_count < 32) {
-                ps[piece_count].owner = owner;
-                ps[piece_count].captured = 0;
-                ps[piece_count].moved = 0;
-                ps[piece_count].xpos = x;
-                ps[piece_count].ypos = y;
-
-                char c = tolower(*p);  
-                switch (c) {
-                    case 'p': ps[piece_count].type = 0; break;   
-                    case 'r': ps[piece_count].type = 1; break;  
-                    case 'n': ps[piece_count].type = 2; break;  
-                    case 'b': ps[piece_count].type = 3; break;  
-                    case 'q': ps[piece_count].type = 4; break;  
-                    case 'k': ps[piece_count].type = 5; break;  
-                }
-
-                piece_count++;  
+            if (isupper(c)) {
+                p.owner = 0;
+            } else {
+                p.owner = 1;
             }
-            x++;  
+
+            switch (tolower(c)) {
+                case 'p': p.type = 0; break;
+                case 'r': p.type = 1; break;
+                case 'n': p.type = 2; break;
+                case 'b': p.type = 3; break;
+                case 'q': p.type = 4; break;
+                case 'k': p.type = 5; break;
+            }
+
+            if (p.type == 0) {
+                if (p.owner == 0) {
+                    ps[white_pawn_index++] = p;
+                } else {
+                    ps[black_pawn_index++] = p;
+                }
+            } else {
+                if (p.owner == 0) {
+                    ps[white_other_index++] = p;
+                } else {
+                    ps[black_other_index++] = p;
+                }
+            }
         }
-
-        if (y >= 8) break;
     }
-}
 
+    return ps;
+}
 
 
 int treeBuilder(struct State *rootNode, int player, int prune) { 
@@ -840,163 +860,3 @@ int buildFullTree(struct State *rootNode, const int pl, int depth) {
     }
     return 0;
 }
-
-struct Piece* loadpieces() {
-    struct Piece* ps = (struct Piece*)calloc(32, sizeof(struct Piece)); /*allocate memory for 32 pieces*/
-    /*temporary workaround for setting the state of pieces hardcoded*/
-   /*TODO: implement FEN and UCI*/    
-
-    // White pieces
-// White pieces
-// Pawns
-for (int i = 0; i < 8; i++) {
-    ps[i].type = 0; // Pawn
-    ps[i].owner = 0; // White
-    ps[i].captured = 0;
-    ps[i].moved = 0;
-    ps[i].xpos = i + 1;
-    ps[i].ypos = 2;
-}
-
-// Rooks
-ps[8].type = 1; // Rook
-ps[8].owner = 0; // White
-ps[8].captured = 0;
-ps[8].moved = 0;
-ps[8].xpos = 1;
-ps[8].ypos = 1;
-
-ps[9].type = 1; // Rook
-ps[9].owner = 0; // White
-ps[9].captured = 0;
-ps[8].xpos = 1;
-ps[8].ypos = 1;
-
-ps[9].type = 1; // Rook
-ps[9].owner = 0; // White
-ps[9].captured = 0;
-ps[9].moved = 0;
-ps[9].xpos = 8;
-ps[9].ypos = 1;
-
-// Knights
-ps[10].type = 2; // Knight
-ps[10].owner = 0; // White
-ps[10].captured = 0;
-ps[10].moved = 0;
-ps[10].xpos = 2;
-ps[10].ypos = 1;
-
-ps[11].type = 2; // Knight
-ps[11].owner = 0; // White
-ps[11].captured = 0;
-ps[11].moved = 0;
-ps[11].xpos = 7;
-ps[11].ypos = 1;
-
-// Bishops
-ps[12].type = 3; // Bishop
-ps[12].owner = 0; // White
-ps[12].captured = 0;
-ps[12].moved = 0;
-ps[12].xpos = 3;
-ps[12].ypos = 1;
-
-ps[13].type = 3; // Bishop
-ps[13].owner = 0; // White
-ps[13].captured = 0;
-ps[13].moved = 0;
-ps[13].xpos = 6;
-ps[13].ypos = 1;
-
-// Queens
-ps[14].type = 4; // Queen
-ps[14].owner = 0; // White
-ps[14].captured = 0;
-ps[14].moved = 0;
-ps[14].xpos = 4;
-ps[14].ypos = 1;
-
-// Kings
-ps[15].type = 5; // King
-ps[15].owner = 0; // White
-ps[15].captured = 0;
-ps[15].moved = 0;
-ps[15].xpos = 5;
-ps[15].ypos = 1;
-
-// Black pieces
-// Pawns
-for (int i = 16; i < 24; i++) {
-    ps[i].type = 0; // Pawn
-    ps[i].owner = 1; // Black
-    ps[i].captured = 0;
-    ps[i].moved = 0;
-    ps[i].xpos = (i - 16) + 1;
-    ps[i].ypos = 7;
-}
-
-// Rooks
-ps[24].type = 1; // Rook
-ps[24].owner = 1; // Black
-ps[24].captured = 0;
-ps[24].moved = 0;
-ps[24].xpos = 1;
-ps[24].ypos = 8;
-
-ps[25].type = 1; // Rook
-ps[25].owner = 1; // Black
-ps[25].captured = 0;
-ps[25].moved = 0;
-ps[25].xpos = 8;
-ps[25].ypos = 8;
-
-// Knights
-ps[26].type = 2; // Knight
-ps[26].owner = 1; // Black
-ps[26].captured = 0;
-ps[26].moved = 0;
-ps[26].xpos = 2;
-ps[26].ypos = 8;
-
-ps[27].type = 2; // Knight
-ps[27].owner = 1; // Black
-ps[27].captured = 0;
-ps[27].moved = 0;
-ps[27].xpos = 7;
-ps[27].ypos = 8;
-
-// Bishops
-ps[28].type = 3; // Bishop
-ps[28].owner = 1; // Black
-ps[28].captured = 0;
-ps[28].moved = 0;
-ps[28].xpos = 3;
-ps[28].ypos = 8;
-
-ps[29].type = 3; // Bishop
-ps[29].owner = 1; // Black
-ps[29].captured = 0;
-ps[29].moved = 0;
-ps[29].xpos = 6;
-ps[29].ypos = 8;
-
-// Queens
-ps[30].type = 4; // Queen
-ps[30].owner = 1; // Black
-ps[30].captured = 0;
-ps[30].moved = 0;
-ps[30].xpos = 4;
-ps[30].ypos = 8;
-
-// Kings
-ps[31].type = 5; // King
-ps[31].owner = 1; // Black
-ps[31].captured = 0;
-ps[31].moved = 0;
-ps[31].xpos = 5;
-ps[31].ypos = 8;
-
-                    
-    return ps;
- }
