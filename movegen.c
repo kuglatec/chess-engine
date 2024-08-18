@@ -612,7 +612,7 @@ int eval(struct Piece* ps, int player) {
              //   printf("\n%d/%d\n", mv.destX, mv.destY);
                 mv.pieceID = p;
                 if (mValid(mv, ps, player) == 1) {
-                  //  score = score + 1;
+                    score = score + 2;
 
                   //  printf("\n\nPIECEID: %d\n\n", p);
                 }
@@ -625,7 +625,7 @@ int eval(struct Piece* ps, int player) {
                // printf("\n%d/%d\n", mv.destX, mv.destY);
                 mv.pieceID = p;
                 if (mValid(mv, ps, player) == 1) {
-                  //  score = score + 1;
+                    //score = score + 1;
 
                   //  printf("\n\nPIECEID: %d\n\n", p);
                 }
@@ -876,9 +876,10 @@ struct Move getBestMove(struct State* rootNode, int pl, int depth) {
             old_max_eval = max_eval;
             max_eval = MAX(max_eval, evaluation);
             if (max_eval != old_max_eval) {
-                printf("\nHEY");
+                bestMove = rootNode->children[i]->m;
             }
         }
+        return bestMove;
     }
 }
 
