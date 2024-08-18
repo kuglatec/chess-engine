@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
+#include <math.h>
 #include "structs.h"
 /*init values for pieces in decipawns*/
 #define QUEEN 90 
@@ -13,6 +14,8 @@
 #define KING 10000
 #define PRUNING_START 4
 #define MIN_ADVANTAGE 2
+#define MAX(x, y) (((x) > (y)) ? (x) : (y))
+#define MIN(x, y) (((x) < (y)) ? (x) : (y))
 struct Square kqs[2]; /*keysquares (D & E 4 or D & E 5)*/
 struct Square iqs[2]; /*important squares (C & F 4 or C & F 5)*/
 
@@ -720,9 +723,6 @@ struct Move* getMoves(struct Piece* ps, int player) {
     }
     return mvs;
 }
-
-
-
 struct State* getstates(struct Piece* ps, const int pl, const int depth) { /*function for getting game "states" aka nodes of a specific position that will later be used in a tree for minimax*/
     const int player = pl;
     
@@ -832,6 +832,36 @@ int treeBuilder(struct State *rootNode, int player, int prune) {
   //  printf("\nX:%d\nY:%d\nST: %d\nNST:%d\n", states[i].m.destX, states[i].m.destY, rootNode->stlen, states[i].score - states[i].bscore);
    }
     return 0;
+}
+
+int minimax(struct State* rootNode, int pl, int depth, int maximizing) {
+    int opponent = 0;
+    if (pl == 0) {
+        opponent = 1;
+    }   
+    if (depth == 0) {
+        return eval(rootNode->ps, pl);
+    }
+    if (maximizing == 1) {
+        int max_eval = -INFINITY;
+        for (int i = 0; i < rootNode->stlen; i++) {
+            int eval = minimax(rootNode->children[i], pl, depth - 1, 0);
+            max_eval = MAX(max_eval, eval);
+        }
+        return max_eval;
+
+    }
+    else if (maximizing == 0) {
+        int min_eval = INFINITY;
+        for (int i = 0; i < rootNode->stlen; i++) {
+            int eval = minimax(rootNode->children[i], pl, depth - 1, 1);
+            min_eval = MIN(min_eval, eval);
+        }
+        return min_eval;
+    }
+    
+    
+
 }
 
 int buildFullTree(struct State *rootNode, const int pl, int depth) {
