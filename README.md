@@ -8,7 +8,7 @@ function for finding the best move in any position defined by a FEN string
 
 # roadmap
 
-in the near future, i plan to implement the minimax algorithm with alpha beta pruning, the xboard protocol and input in form of FEN strings.
+in the near future, i plan to implement alpha beta pruning and the UCI protocol
 
 # usage
 set a FEN string in main.c
