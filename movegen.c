@@ -699,7 +699,7 @@ struct Piece* makeMove(struct Move mv, struct Piece* ps, int player) {
 
 struct Move* getMoves(struct Piece* ps, int player) {
      struct Move mv;
-     struct Move* mvs = (struct Move*)calloc(256, sizeof(struct Move)); /*array of valid moves*/
+     struct Move* mvs = (struct Move*)calloc(218, sizeof(struct Move)); /*array of valid moves*/
      int nom = 0; /*number of moves*/
      for (int p = 0; p < 32; p++) {
         for (int x = 1; x < 9; x++) {
@@ -735,7 +735,7 @@ struct State* getstates(struct Piece* ps, const int pl, const int depth) { /*fun
     }
     const int opponent = op;
 
-    struct State* states = (struct State*)calloc(256, sizeof(struct State));
+    struct State* states = (struct State*)calloc(218, sizeof(struct State));
     struct Move* pmvs = getMoves(ps, player);
     for (int i = 0; i < pmvs[0].arlen; i++) {
         states[i].m = pmvs[i];
@@ -743,13 +743,8 @@ struct State* getstates(struct Piece* ps, const int pl, const int depth) { /*fun
         for (int p = 0; p < 32; p++) {
             states[i].ps[p] = ps[p];
         }
-        states[i].bscore = eval(states[i].ps, player);
         makeMove(states[i].m, states[i].ps, player);
         states[i].score = eval(states[i].ps, player);
-        states[i].dead = 0;
-        if (!(states[i].bscore - states[i].score > MIN_ADVANTAGE)) {
-            states[i].dead = 1;
-        }
         
     }
 
@@ -825,12 +820,6 @@ int treeBuilder(struct State *rootNode, int player, int prune) {
     for (int i = 0; i < rootNode->stlen/* && states[i].score - states[i].bscore > MIN_ADVANTAGE*/; i++) {
         rootNode->children[i] = &states[i];
     }
-   for (int i = 0; i < rootNode->stlen; i++) {
-    if (states[i].score - states[i].bscore > MIN_ADVANTAGE) {
-        nstlen++;
-    }
-  //  printf("\nX:%d\nY:%d\nST: %d\nNST:%d\n", states[i].m.destX, states[i].m.destY, rootNode->stlen, states[i].score - states[i].bscore);
-   }
     return 0;
 }
 
@@ -910,3 +899,51 @@ int buildFullTree(struct State *rootNode, const int pl, int depth) {
     }
     return 0;
 }
+
+void cli() {
+    system("clear");
+    printf("\n Welcome to C-Chess!\n");
+    const char *chess_knight_art =
+        "  |\\_\n"
+        " /  .\\_\n"
+        "|   ___)\n"
+        "|    \\\n"
+        "|  =  |\n"
+        " /_____\\\n"
+        "[_______]\n";
+
+    // Print the ASCII art
+    printf("%s", chess_knight_art);
+    char fen[256];
+    int dpth;
+    printf("\nengine plays as white\n");
+    printf("depth ->");
+    scanf("%d", &dpth);
+        printf("Enter FEN ->");
+        scanf("%255s", fen);
+      //  strcpy(fen, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+        //const char *fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"; /*default game setup*/ 
+        struct Piece* ps = loadpiecesFromFEN(fen); /*initalize pointer to pieces array allocated on heap*/
+        
+        struct State rootNode;
+        for (int i = 0; i < 32; i++) {
+        rootNode.ps[i] = ps[i];
+        }
+        printf("\n%dd\n", buildFullTree(&rootNode, 0, 3));
+        struct Move bestMove = getBestMove(&rootNode, 0, 3);
+        printf("\n%d%d\n%d%d\n", bestMove.startX, bestMove.startY, bestMove.destX, bestMove.destY);
+       /* if (strcmp(fen, "quit") == 0) {
+            exit(0);
+        }
+        struct Piece* ps = loadpiecesFromFEN(fen);
+        struct State rootNode;
+        for (int i = 0; i < 32; i++) {
+            rootNode.ps[i] = ps[i];
+        }
+        printf("\nthinking...\n");
+        buildFullTree(&rootNode, 0, dpth);
+        struct Move bestMove = getBestMove(&rootNode, 0, 4);
+        
+        exit(0);
+        */
+    }
