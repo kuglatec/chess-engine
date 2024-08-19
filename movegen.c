@@ -1,4 +1,4 @@
-
+#define DEPTH 3
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
@@ -917,10 +917,13 @@ void cli() {
     char fen[256];
     int dpth;
     printf("\nengine plays as white\n");
-    printf("depth ->");
-    scanf("%d", &dpth);
-        printf("Enter FEN ->");
-        scanf("%255s", fen);
+    printf("Enter FEN ->");
+    //scanf("%255s", fen);
+    fgets(fen, sizeof(fen), stdin);
+        size_t length = strlen(fen);
+        if (length > 0 && fen[length - 1] == '\n') {
+        fen[length - 1] = '\0';
+        }
       //  strcpy(fen, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
         //const char *fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"; /*default game setup*/ 
         struct Piece* ps = loadpiecesFromFEN(fen); /*initalize pointer to pieces array allocated on heap*/
@@ -929,8 +932,8 @@ void cli() {
         for (int i = 0; i < 32; i++) {
         rootNode.ps[i] = ps[i];
         }
-        printf("\n%dd\n", buildFullTree(&rootNode, 0, 3));
-        struct Move bestMove = getBestMove(&rootNode, 0, 3);
+        buildFullTree(&rootNode, 0, DEPTH);
+        struct Move bestMove = getBestMove(&rootNode, 0, DEPTH);
         printf("\n%d%d\n%d%d\n", bestMove.startX, bestMove.startY, bestMove.destX, bestMove.destY);
        /* if (strcmp(fen, "quit") == 0) {
             exit(0);
