@@ -860,11 +860,11 @@ struct Move getBestMove(struct State* rootNode, int pl, int depth) {
     struct Move bestMove;
     int old_max_eval;
     for (int i = 0; i < rootNode->stlen; i++) {
-        int max_eval = -INFINITY;
+        int max_eval = INFINITY;
         for (int i = 0; i < rootNode->stlen; i++) {
-            int evaluation = minimax(rootNode->children[i], &rootNode->m, pl, depth - 1, 0);
+            int evaluation = minimax(rootNode->children[i], &rootNode->m, pl, depth - 1, 1);
             old_max_eval = max_eval;
-            max_eval = MAX(max_eval, evaluation);
+            max_eval = MIN(max_eval, evaluation);
             if (max_eval != old_max_eval) {
                 bestMove = rootNode->children[i]->m;
             }
