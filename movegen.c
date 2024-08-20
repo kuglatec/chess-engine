@@ -753,13 +753,10 @@ struct State* getstates(struct Piece* ps, const int pl, const int depth) { /*fun
 
 
 struct Piece* loadpiecesFromFEN(const char* fen) {
-    struct Piece* ps = (struct Piece*)calloc(32, sizeof(struct Piece));
-    int white_pawn_index = 0;
-    int white_other_index = 8;
-    int black_pawn_index = 16;
-    int black_other_index = 24;
+    struct Piece* ps = NULL;
+    int piece_count = 0;
 
-    const char* piece_positions = strtok(strdup(fen), " ");
+    const char* piece_positions = fen;
     int xpos = 1;
     int ypos = 8;
 
@@ -777,12 +774,7 @@ struct Piece* loadpiecesFromFEN(const char* fen) {
             p.moved = 0;
             p.xpos = xpos++;
             p.ypos = ypos;
-
-            if (isupper(c)) {
-                p.owner = 0;
-            } else {
-                p.owner = 1;
-            }
+            p.owner = isupper(c) ? 0 : 1;
 
             switch (tolower(c)) {
                 case 'p': p.type = 0; break;
@@ -793,19 +785,8 @@ struct Piece* loadpiecesFromFEN(const char* fen) {
                 case 'k': p.type = 5; break;
             }
 
-            if (p.type == 0) {
-                if (p.owner == 0) {
-                    ps[white_pawn_index++] = p;
-                } else {
-                    ps[black_pawn_index++] = p;
-                }
-            } else {
-                if (p.owner == 0) {
-                    ps[white_other_index++] = p;
-                } else {
-                    ps[black_other_index++] = p;
-                }
-            }
+            ps = realloc(ps, (piece_count + 1) * sizeof(struct Piece));
+            ps[piece_count++] = p;
         }
     }
 
@@ -935,6 +916,7 @@ void cli() {
         buildFullTree(&rootNode, 0, DEPTH);
         struct Move bestMove = getBestMove(&rootNode, 0, DEPTH);
         printf("\n%d%d\n%d%d\n", bestMove.startX, bestMove.startY, bestMove.destX, bestMove.destY);
+        free(ps);
        /* if (strcmp(fen, "quit") == 0) {
             exit(0);
         }
