@@ -597,9 +597,14 @@ int eval(struct Piece* ps, int player) {
              //   printf("\n%d/%d\n", mv.destX, mv.destY);
                 mv.pieceID = p;
                 if (mValid(mv, ps, player) == 1) {
-                    score = score + 2;
+                    score = score + 3;
 
                   //  printf("\n\nPIECEID: %d\n\n", p);
+                }
+                if (mValid(mv, ps, opponent) == 1) {
+                    score = score - 3;
+
+                    //  printf("\n\nPIECEID: %d\n\n", p);
                 }
             }
             for (int i = 0; i < 2; i++) {
@@ -734,25 +739,6 @@ struct State* getstates(struct Piece* ps, const int pl, const int depth) { /*fun
     return states;
 }
 
-
-void initializeFullSet(struct Piece* ps) {
-    for (int i = 0; i < 8; i++) {
-        ps[i].type = 0; ps[i].owner = 0; ps[i].xpos = i + 1; ps[i].ypos = 2; ps[i].captured = 1; ps[i].moved = 0;
-    }
-    ps[8]  = (struct Piece){1, 0, 1, 1, 0, 1}; ps[9]  = (struct Piece){1, 0, 8, 1, 0, 1};
-    ps[10] = (struct Piece){1, 0, 2, 1, 0, 2}; ps[11] = (struct Piece){1, 0, 7, 1, 0, 2};
-    ps[12] = (struct Piece){1, 0, 3, 1, 0, 3}; ps[13] = (struct Piece){1, 0, 6, 1, 0, 3};
-    ps[14] = (struct Piece){1, 0, 4, 1, 0, 4}; ps[15] = (struct Piece){1, 0, 5, 1, 0, 5};
-
-    for (int i = 16; i < 24; i++) {
-        ps[i].type = 0; ps[i].owner = 1; ps[i].xpos = i - 15; ps[i].ypos = 7; ps[i].captured = 1; ps[i].moved = 0;
-    }
-    ps[24] = (struct Piece){1, 0, 1, 8, 1, 1}; ps[25] = (struct Piece){1, 0, 8, 8, 1, 1};
-    ps[26] = (struct Piece){1, 0, 2, 8, 1, 2}; ps[27] = (struct Piece){1, 0, 7, 8, 1, 2};
-    ps[28] = (struct Piece){1, 0, 3, 8, 1, 3}; ps[29] = (struct Piece){1, 0, 6, 8, 1, 3};
-    ps[30] = (struct Piece){1, 0, 4, 8, 1, 4}; ps[31] = (struct Piece){1, 0, 5, 8, 1, 5};
-}
-
 struct Piece* loadpiecesFromFEN(const char* fen) {
     struct Piece* ps = (struct Piece*)calloc(32, sizeof(struct Piece));
     int white_pawn_index = 0;
@@ -826,38 +812,42 @@ int treeBuilder(struct State *rootNode, int player, int prune) {
 
 
 
-int minimax(struct State* rootNode, struct Move *bestMove, int pl, int depth, int maximizing) {
-    int opponent = 0;
-    if (pl == 0) {
-        opponent = 1;
-    }   
-    if (depth == 0) {
+int minimax(struct State* rootNode, struct Move* bestMove, int pl, int depth, int maximizing, int root) {
+    int opponent = (pl == 0) ? 1 : 0;
+
+    if (depth == 0 || rootNode->stlen == 0) {  // Terminal condition: either depth = 0 or no children
         return rootNode->score;
     }
-    if (maximizing == 1) {
-        int max_eval = -INFINITY;
+
+    if (maximizing) {
+        double max_eval = -INFINITY;  // Use negative infinity from math.h
         for (int i = 0; i < rootNode->stlen; i++) {
-            int evaluation = minimax(rootNode->children[i], bestMove, pl, depth - 1, 0);
-            max_eval = MAX(max_eval, evaluation);
+            int evaluation = minimax(rootNode->children[i], bestMove, pl, depth - 1, 0, 0);
+            if (evaluation > max_eval) {
+                max_eval = evaluation;
+                if (root) {
+                    *bestMove = rootNode->children[i]->m;  // Update the best move at the root level
+                }
+            }
         }
         return max_eval;
-
-    }
-    else if (maximizing == 0) {
-        int min_eval = INFINITY;
+    } else {
+        double min_eval = INFINITY;  // Use positive infinity from math.h
         for (int i = 0; i < rootNode->stlen; i++) {
-            int evaluation = minimax(rootNode->children[i], bestMove, pl, depth - 1, 1);
-            min_eval = MIN(min_eval, evaluation);
+            int evaluation = minimax(rootNode->children[i], bestMove, pl, depth - 1, 1, 0);
+            if (evaluation < min_eval) {
+                min_eval = evaluation;
+                if (root) {
+                    *bestMove = rootNode->children[i]->m;  // Update the best move at the root level
+                }
+            }
         }
         return min_eval;
     }
-    
-    
-
 }
 
 struct Move getBestMove(struct State* rootNode, int pl, int depth) {
-    struct Move bestMove;
+  /*  struct Move bestMove;
     int old_max_eval;
     for (int i = 0; i < rootNode->stlen; i++) {
         int max_eval = INFINITY;
@@ -865,12 +855,13 @@ struct Move getBestMove(struct State* rootNode, int pl, int depth) {
             int evaluation = minimax(rootNode->children[i], &rootNode->m, pl, depth - 1, 1);
             old_max_eval = max_eval;
             max_eval = MIN(max_eval, evaluation);
-            if (max_eval != old_max_eval) {
-                bestMove = rootNode->children[i]->m;
-            }
         }
         return bestMove;
     }
+    */
+    struct Move bestMove;
+    minimax(rootNode, &bestMove, 0, depth, 1, 1);
+    return bestMove;
 }
 
 int buildFullTree(struct State *rootNode, const int pl, int depth) {
@@ -880,9 +871,6 @@ int buildFullTree(struct State *rootNode, const int pl, int depth) {
             op = 1;
     }
     int prune = 0;
-    if (depth > PRUNING_START) {
-        int prune = 1; /*if the depth is bigger than PRUNING-START, the function should use alpha beta pruning to optimize its time usage*/
-    }
     rootNode->score = eval(rootNode->ps, 0);
     const int opponent = op;
     const int player = pl;
