@@ -601,11 +601,6 @@ int eval(struct Piece* ps, int player) {
 
                   //  printf("\n\nPIECEID: %d\n\n", p);
                 }
-                if (mValid(mv, ps, opponent) == 1) {
-                    score = score - 3;
-
-                    //  printf("\n\nPIECEID: %d\n\n", p);
-                }
             }
             for (int i = 0; i < 2; i++) {
                 mv.startX = ps[p].xpos;
@@ -660,6 +655,7 @@ struct Piece* makeMove(struct Move mv, struct Piece* ps, int player) {
     ps[mv.pieceID].moved = 1;
     for (int p = 0; p < 32; p++) {
         if (ps[p].xpos == mv.destX && ps[p].ypos == mv.destY && ps[p].captured == 0 && ps[p].owner != player) { /*workaround fix*/
+            ps[mv.pieceID].moved = 1;
             ps[p].captured = 1; /*piece gets captured*/
           //  printf("\nPiece no: %d/%d|%d/%d\n", mv.pieceID, p, mv.destX, mv.destY);
         }
