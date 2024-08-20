@@ -13,7 +13,6 @@
 #define BISHOP 32
 #define KING 10000
 #define PRUNING_START 4
-#define MIN_ADVANTAGE 2
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
 struct Square kqs[2]; /*keysquares (D & E 4 or D & E 5)*/
@@ -523,28 +522,32 @@ int mValid(struct Move m, struct Piece* ps, const int pl) { /*function to valida
 }  
 
 
-int materialCounter(struct Piece* tps) {
+int materialCounter(struct Piece* ps, int player) {
     int tmpscore = 0;
-    for (int p = 0; p < 16; p++) {
-        if (tps[p].captured == 0) {
-            switch (tps[p].type) {
+    for (int p = 0; p < 32; p++) {
+        if (ps[p].captured == 0) {
+            int own = 1;
+            if (ps->owner != player) {
+                own = -1;
+            }
+            switch (ps[p].type) {
                 case 0:
-                    tmpscore += PAWN;
+                    tmpscore += PAWN * own;
                     break;
                 case 1:
-                    tmpscore += ROOK;
+                    tmpscore += ROOK * own;
                     break;
                 case 2:
-                    tmpscore += KNIGHT;
+                    tmpscore += KNIGHT * own;
                     break; 
                 case 3:
-                    tmpscore += BISHOP;
+                    tmpscore += BISHOP * own;
                     break; 
                 case 4:
-                    tmpscore += QUEEN;
+                    tmpscore += QUEEN * own;
                     break; 
                 case 5:
-                    tmpscore += KING;
+                    tmpscore += KING * own;
                     break; 
                 default:
                     break;
@@ -561,27 +564,9 @@ int eval(struct Piece* ps, int player) {
     int score; /*players score*/
     int opscore; /*opponents score*/
     int tmpscore = 0; /*temporary score buffer*/
-    struct Piece* pps = (struct Piece*)calloc(16, sizeof(struct Piece)); /*player pieces*/
-    struct Piece* ops = (struct Piece*)calloc(16, sizeof(struct Piece)); /*opponent pieces*/
     struct Piece king;
     int noKey = 0;
-    int npps = 0;
-    int nops = 0;
-    for (int p = 0; p < 32; p++)
-        if (ps[p].owner == player) {
-            pps[npps] = ps[p];
-            npps++;
-        }
-        else if (ps[p].owner == opponent) {
-            ops[nops] = ps[p];
-            nops++;
-        }
-    for (int i = 0; i < 16; i++) {
-        if (pps[i].type == 5) {
-            king = pps[i];
-        }
-    }
-    score = materialCounter(pps);
+    score = materialCounter(ps, player);
     kqs[0].x = 4;
     kqs[1].x = 5;
     iqs[0].x = 3;
@@ -657,9 +642,7 @@ int eval(struct Piece* ps, int player) {
             }
         }
    }
-    
-    opscore = materialCounter(ops);
-    score = score - opscore;
+
     return score;
     
 
@@ -752,13 +735,30 @@ struct State* getstates(struct Piece* ps, const int pl, const int depth) { /*fun
 }
 
 
+void initializeFullSet(struct Piece* ps) {
+    for (int i = 0; i < 8; i++) {
+        ps[i].type = 0; ps[i].owner = 0; ps[i].xpos = i + 1; ps[i].ypos = 2; ps[i].captured = 1; ps[i].moved = 0;
+    }
+    ps[8]  = (struct Piece){1, 0, 1, 1, 0, 1}; ps[9]  = (struct Piece){1, 0, 8, 1, 0, 1};
+    ps[10] = (struct Piece){1, 0, 2, 1, 0, 2}; ps[11] = (struct Piece){1, 0, 7, 1, 0, 2};
+    ps[12] = (struct Piece){1, 0, 3, 1, 0, 3}; ps[13] = (struct Piece){1, 0, 6, 1, 0, 3};
+    ps[14] = (struct Piece){1, 0, 4, 1, 0, 4}; ps[15] = (struct Piece){1, 0, 5, 1, 0, 5};
+
+    for (int i = 16; i < 24; i++) {
+        ps[i].type = 0; ps[i].owner = 1; ps[i].xpos = i - 15; ps[i].ypos = 7; ps[i].captured = 1; ps[i].moved = 0;
+    }
+    ps[24] = (struct Piece){1, 0, 1, 8, 1, 1}; ps[25] = (struct Piece){1, 0, 8, 8, 1, 1};
+    ps[26] = (struct Piece){1, 0, 2, 8, 1, 2}; ps[27] = (struct Piece){1, 0, 7, 8, 1, 2};
+    ps[28] = (struct Piece){1, 0, 3, 8, 1, 3}; ps[29] = (struct Piece){1, 0, 6, 8, 1, 3};
+    ps[30] = (struct Piece){1, 0, 4, 8, 1, 4}; ps[31] = (struct Piece){1, 0, 5, 8, 1, 5};
+}
+
 struct Piece* loadpiecesFromFEN(const char* fen) {
-    struct Piece* ps = NULL;
-    int piece_count = 0;
+    struct Piece* ps = (struct Piece*)malloc(32 * sizeof(struct Piece));
+    initializeFullSet(ps);
 
     const char* piece_positions = fen;
-    int xpos = 1;
-    int ypos = 8;
+    int xpos = 1, ypos = 8;
 
     for (int i = 0; piece_positions[i] != '\0'; i++) {
         char c = piece_positions[i];
@@ -769,24 +769,25 @@ struct Piece* loadpiecesFromFEN(const char* fen) {
         } else if (c >= '1' && c <= '8') {
             xpos += c - '0';
         } else {
-            struct Piece p;
-            p.captured = 0;
-            p.moved = 0;
-            p.xpos = xpos++;
-            p.ypos = ypos;
-            p.owner = isupper(c) ? 0 : 1;
-
+            int owner = isupper(c) ? 0 : 1, type;
             switch (tolower(c)) {
-                case 'p': p.type = 0; break;
-                case 'r': p.type = 1; break;
-                case 'n': p.type = 2; break;
-                case 'b': p.type = 3; break;
-                case 'q': p.type = 4; break;
-                case 'k': p.type = 5; break;
+                case 'p': type = 0; break;
+                case 'r': type = 1; break;
+                case 'n': type = 2; break;
+                case 'b': type = 3; break;
+                case 'q': type = 4; break;
+                case 'k': type = 5; break;
+                default: continue;
             }
 
-            ps = realloc(ps, (piece_count + 1) * sizeof(struct Piece));
-            ps[piece_count++] = p;
+            for (int j = 0; j < 32; j++) {
+                if (ps[j].type == type && ps[j].owner == owner && ps[j].captured == 1) {
+                    ps[j].xpos = xpos++;
+                    ps[j].ypos = ypos;
+                    ps[j].captured = 0;
+                    break;
+                }
+            }
         }
     }
 
@@ -916,6 +917,11 @@ void cli() {
         buildFullTree(&rootNode, 0, DEPTH);
         struct Move bestMove = getBestMove(&rootNode, 0, DEPTH);
         printf("\n%d%d\n%d%d\n", bestMove.startX, bestMove.startY, bestMove.destX, bestMove.destY);
+        for (int i = 0; i < 32; i++) {
+            if(ps[i].xpos == bestMove.startX && ps[i].ypos == bestMove.startY) {
+                printf("\nOKAYEY%d/%d %d%d\n", ps[i].type, ps[i].owner, ps[i].xpos, ps[i].ypos);
+            }
+        }
         free(ps);
        /* if (strcmp(fen, "quit") == 0) {
             exit(0);
