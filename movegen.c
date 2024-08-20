@@ -754,11 +754,15 @@ void initializeFullSet(struct Piece* ps) {
 }
 
 struct Piece* loadpiecesFromFEN(const char* fen) {
-    struct Piece* ps = (struct Piece*)malloc(32 * sizeof(struct Piece));
-    initializeFullSet(ps);
+    struct Piece* ps = (struct Piece*)calloc(32, sizeof(struct Piece));
+    int white_pawn_index = 0;
+    int white_other_index = 8;
+    int black_pawn_index = 16;
+    int black_other_index = 24;
 
-    const char* piece_positions = fen;
-    int xpos = 1, ypos = 8;
+    const char* piece_positions = strtok(strdup(fen), " ");
+    int xpos = 1;
+    int ypos = 8;
 
     for (int i = 0; piece_positions[i] != '\0'; i++) {
         char c = piece_positions[i];
@@ -769,23 +773,38 @@ struct Piece* loadpiecesFromFEN(const char* fen) {
         } else if (c >= '1' && c <= '8') {
             xpos += c - '0';
         } else {
-            int owner = isupper(c) ? 0 : 1, type;
-            switch (tolower(c)) {
-                case 'p': type = 0; break;
-                case 'r': type = 1; break;
-                case 'n': type = 2; break;
-                case 'b': type = 3; break;
-                case 'q': type = 4; break;
-                case 'k': type = 5; break;
-                default: continue;
+            struct Piece p;
+            p.captured = 0;
+            p.moved = 0;
+            p.xpos = xpos++;
+            p.ypos = ypos;
+
+            if (isupper(c)) {
+                p.owner = 0;
+            } else {
+                p.owner = 1;
             }
 
-            for (int j = 0; j < 32; j++) {
-                if (ps[j].type == type && ps[j].owner == owner && ps[j].captured == 1) {
-                    ps[j].xpos = xpos++;
-                    ps[j].ypos = ypos;
-                    ps[j].captured = 0;
-                    break;
+            switch (tolower(c)) {
+                case 'p': p.type = 0; break;
+                case 'r': p.type = 1; break;
+                case 'n': p.type = 2; break;
+                case 'b': p.type = 3; break;
+                case 'q': p.type = 4; break;
+                case 'k': p.type = 5; break;
+            }
+
+            if (p.type == 0) {
+                if (p.owner == 0) {
+                    ps[white_pawn_index++] = p;
+                } else {
+                    ps[black_pawn_index++] = p;
+                }
+            } else {
+                if (p.owner == 0) {
+                    ps[white_other_index++] = p;
+                } else {
+                    ps[black_other_index++] = p;
                 }
             }
         }
@@ -897,44 +916,21 @@ void cli() {
     // Print the ASCII art
     printf("%s", chess_knight_art);
     char fen[256];
-    int dpth;
     printf("\nengine plays as white\n");
     printf("Enter FEN ->");
-    //scanf("%255s", fen);
     fgets(fen, sizeof(fen), stdin);
         size_t length = strlen(fen);
         if (length > 0 && fen[length - 1] == '\n') {
         fen[length - 1] = '\0';
         }
-      //  strcpy(fen, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-        //const char *fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"; /*default game setup*/ 
         struct Piece* ps = loadpiecesFromFEN(fen); /*initalize pointer to pieces array allocated on heap*/
-        
         struct State rootNode;
         for (int i = 0; i < 32; i++) {
         rootNode.ps[i] = ps[i];
         }
+        printf("\nthinking...");
         buildFullTree(&rootNode, 0, DEPTH);
         struct Move bestMove = getBestMove(&rootNode, 0, DEPTH);
         printf("\n%d%d\n%d%d\n", bestMove.startX, bestMove.startY, bestMove.destX, bestMove.destY);
-        for (int i = 0; i < 32; i++) {
-            if(ps[i].xpos == bestMove.startX && ps[i].ypos == bestMove.startY) {
-                printf("\nOKAYEY%d/%d %d%d\n", ps[i].type, ps[i].owner, ps[i].xpos, ps[i].ypos);
-            }
-        }
         free(ps);
-       /* if (strcmp(fen, "quit") == 0) {
-            exit(0);
-        }
-        struct Piece* ps = loadpiecesFromFEN(fen);
-        struct State rootNode;
-        for (int i = 0; i < 32; i++) {
-            rootNode.ps[i] = ps[i];
-        }
-        printf("\nthinking...\n");
-        buildFullTree(&rootNode, 0, dpth);
-        struct Move bestMove = getBestMove(&rootNode, 0, 4);
-        
-        exit(0);
-        */
     }
