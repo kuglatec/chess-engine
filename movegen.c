@@ -791,7 +791,11 @@ struct Piece* loadpiecesFromFEN(const char* fen) {
             }
         }
     }
-
+    for (int i = 0; i < 32; i++) {
+        if (ps[i].type == 0 && ((ps[i].ypos != 2 && ps[i].owner == 0) || (ps[i].ypos != 7 && ps[i].owner == 1))) {
+            ps[i].moved = 1;
+        }
+    }
     return ps;
 }
 
