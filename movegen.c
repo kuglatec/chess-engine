@@ -11,8 +11,7 @@
 #define PAWN 10
 #define KNIGHT 30
 #define BISHOP 32
-#define KING 10000
-#define PRUNING_START 4
+#define KING 0
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
 struct Square kqs[2]; /*keysquares (D & E 4 or D & E 5)*/
@@ -597,7 +596,7 @@ int eval(struct Piece* ps, int player) {
              //   printf("\n%d/%d\n", mv.destX, mv.destY);
                 mv.pieceID = p;
                 if (mValid(mv, ps, player) == 1) {
-                    score = score + 3;
+                  //  score = score + 3;
 
                   //  printf("\n\nPIECEID: %d\n\n", p);
                 }
@@ -634,10 +633,10 @@ int eval(struct Piece* ps, int player) {
               //  printf("\n%d", mv.pieceID);
               //  system("clear");
                 if (mValid(mv, ps, player) == 1) {
-                    score = score + 1;
+                 //   score = score + 1;
                 }
                 if (mValid(mv, ps, opponent) == 1) {
-                    score = score - 1;
+                  //  score = score - 1;
                 }
             }
         }
@@ -812,56 +811,51 @@ int treeBuilder(struct State *rootNode, int player, int prune) {
 
 
 
-int minimax(struct State* rootNode, struct Move* bestMove, int pl, int depth, int maximizing, int root) {
-    int opponent = (pl == 0) ? 1 : 0;
-
-    if (depth == 0 || rootNode->stlen == 0) {  // Terminal condition: either depth = 0 or no children
+int minimax(struct State* rootNode, struct Move *bestMove, int pl, int depth, int maximizing) {
+    int opponent = 0;
+    if (pl == 0) {
+        opponent = 1;
+    }
+    if (depth == 0) {
         return rootNode->score;
     }
-
-    if (maximizing) {
-        double max_eval = -INFINITY;  // Use negative infinity from math.h
+    if (maximizing == 1) {
+        int max_eval = -INFINITY;
         for (int i = 0; i < rootNode->stlen; i++) {
-            int evaluation = minimax(rootNode->children[i], bestMove, pl, depth - 1, 0, 0);
-            if (evaluation > max_eval) {
-                max_eval = evaluation;
-                if (root) {
-                    *bestMove = rootNode->children[i]->m;  // Update the best move at the root level
-                }
-            }
+            int evaluation = minimax(rootNode->children[i], bestMove, pl, depth - 1, 0);
+            max_eval = MAX(max_eval, evaluation);
         }
         return max_eval;
-    } else {
-        double min_eval = INFINITY;  // Use positive infinity from math.h
+
+    }
+    else if (maximizing == 0) {
+        int min_eval = INFINITY;
         for (int i = 0; i < rootNode->stlen; i++) {
-            int evaluation = minimax(rootNode->children[i], bestMove, pl, depth - 1, 1, 0);
-            if (evaluation < min_eval) {
-                min_eval = evaluation;
-                if (root) {
-                    *bestMove = rootNode->children[i]->m;  // Update the best move at the root level
-                }
-            }
+            int evaluation = minimax(rootNode->children[i], bestMove, pl, depth - 1, 1);
+            min_eval = MIN(min_eval, evaluation);
         }
         return min_eval;
     }
+
+
+
 }
 
 struct Move getBestMove(struct State* rootNode, int pl, int depth) {
-  /*  struct Move bestMove;
+    struct Move bestMove;
     int old_max_eval;
     for (int i = 0; i < rootNode->stlen; i++) {
-        int max_eval = INFINITY;
+        int max_eval = -INFINITY;
         for (int i = 0; i < rootNode->stlen; i++) {
-            int evaluation = minimax(rootNode->children[i], &rootNode->m, pl, depth - 1, 1);
+            int evaluation = minimax(rootNode->children[i], &rootNode->m, pl, depth - 1, 0);
             old_max_eval = max_eval;
-            max_eval = MIN(max_eval, evaluation);
+            max_eval = MAX(max_eval, evaluation);
+            if (max_eval != old_max_eval) {
+                bestMove = rootNode->children[i]->m;
+            }
         }
         return bestMove;
     }
-    */
-    struct Move bestMove;
-    minimax(rootNode, &bestMove, 0, depth, 1, 1);
-    return bestMove;
 }
 
 int buildFullTree(struct State *rootNode, const int pl, int depth) {
@@ -918,6 +912,11 @@ void cli() {
         }
         printf("\nthinking...");
         buildFullTree(&rootNode, 0, DEPTH);
+        for (int i = 0; i < rootNode.stlen; i++) {
+            if (rootNode.children[i]->m.startX == 1) {
+                printf("\nX: %d Y; %d\n", rootNode.children[i]->score, rootNode.children[i]->m.destY);
+            }
+        }
         struct Move bestMove = getBestMove(&rootNode, 0, DEPTH);
         printf("\n%d%d\n%d%d\n", bestMove.startX, bestMove.startY, bestMove.destX, bestMove.destY);
         free(ps);
