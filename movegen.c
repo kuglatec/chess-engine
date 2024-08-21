@@ -1,4 +1,4 @@
-#define DEPTH 1
+#define DEPTH 3
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
@@ -480,6 +480,7 @@ int bishopValid(struct Move m, struct Piece* ps, const int pl, int op) {
 }
 
 int mValid(struct Move m, struct Piece* ps, const int pl) { /*function to validate moves*/
+
    const int player = pl;
    int oopponent;
    if (player == 0) {
@@ -691,12 +692,12 @@ struct Piece* loadPiecesFromFEN(const char* fen) {
 
             // Determine the piece type
             switch (tolower(c)) {
-                case 'p': p.type = PAWN; break;
-                case 'r': p.type = ROOK; break;
-                case 'n': p.type = KNIGHT; break;
-                case 'b': p.type = BISHOP; break;
-                case 'q': p.type = QUEEN; break;
-                case 'k': p.type = KING; break;
+                case 'p': p.type = 0; break;
+                case 'r': p.type = 1; break;
+                case 'n': p.type = 2; break;
+                case 'b': p.type = 3; break;
+                case 'q': p.type = 4; break;
+                case 'k': p.type = 5; break;
             }
 
             // Place the piece in the correct part of the array (pawns vs other pieces)
@@ -739,7 +740,7 @@ int treeBuilder(struct State *rootNode, int player, int prune) {
 
 
 
-int minimax(struct State* rootNode, struct Move *bestMove, int pl, int depth, int maximizing) {
+int minimax(struct State* rootNode, int pl, int depth, int maximizing) {
     int opponent = 0;
     if (pl == 0) {
         opponent = 1;
@@ -750,7 +751,7 @@ int minimax(struct State* rootNode, struct Move *bestMove, int pl, int depth, in
     if (maximizing == 1) {
         int max_eval = -INFINITY;
         for (int i = 0; i < rootNode->stlen; i++) {
-            int evaluation = minimax(rootNode->children[i], bestMove, pl, depth - 1, 0);
+            int evaluation = minimax(rootNode->children[i], pl, depth - 1, 0);
             max_eval = MAX(max_eval, evaluation);
         }
         return max_eval;
@@ -759,7 +760,7 @@ int minimax(struct State* rootNode, struct Move *bestMove, int pl, int depth, in
     else if (maximizing == 0) {
         int min_eval = INFINITY;
         for (int i = 0; i < rootNode->stlen; i++) {
-            int evaluation = minimax(rootNode->children[i], bestMove, pl, depth - 1, 1);
+            int evaluation = minimax(rootNode->children[i], pl, depth - 1, 1);
             min_eval = MIN(min_eval, evaluation);
         }
         return min_eval;
@@ -775,16 +776,17 @@ struct Move getBestMove(struct State* rootNode, int pl, int depth) {
     for (int i = 0; i < rootNode->stlen; i++) {
         int max_eval = -INFINITY;
         for (int i = 0; i < rootNode->stlen; i++) {
-            int evaluation = minimax(rootNode->children[i], &rootNode->m, pl, depth - 1, 0);
+            int evaluation = minimax(rootNode->children[i], pl, depth - 1, 0);
             old_max_eval = max_eval;
             max_eval = MAX(max_eval, evaluation);
-            if (max_eval != old_max_eval) {
+            if (max_eval > old_max_eval) {
                 bestMove = rootNode->children[i]->m;
             }
         }
         return bestMove;
     }
 }
+
 
 int buildFullTree(struct State *rootNode, const int pl, int depth) {
     int op = 0;
@@ -808,6 +810,7 @@ int buildFullTree(struct State *rootNode, const int pl, int depth) {
         }
 
     }
+
     return 0;
 }
 
@@ -834,24 +837,33 @@ void cli() {
         fen[length - 1] = '\0';
         }
         struct Piece* ps = loadPiecesFromFEN(fen); /*initalize pointer to pieces array allocated on heap*/
-    for (int i = 0; i < 32; i++) {
-        printf("type: %d\n", ps[i].captured);
-    }
         printf("\neval: %d", eval(ps, 0));
         struct State rootNode;
         for (int i = 0; i < 32; i++) {
         rootNode.ps[i] = ps[i];
         }
-        printf("\nthinking...");
+        printf("\nbuilding tree...");
+      /*  for (int i = 0; i < 32; i++) {
+            if (ps[i].captured == 0) {
+                printf("\nX: %d, Y, %d, Type: %d, owner: %d, id: %d\n", ps[i].xpos, ps[i].ypos, ps[i].type, ps[i].owner, i);
+            }
+        }*/
         buildFullTree(&rootNode, 0, DEPTH);
         for (int i = 0; i < rootNode.stlen; i++) {
+            if (rootNode.children[i]->m.destX == 5 && rootNode.children[i]->m.destY == 7 && ps[rootNode.children[i]->m.pieceID].type == 4) {
+                printf("\n MATE%d\n", i);
+            }
+        }
+        printf("\ncalling minimax...");
+        struct Move bestMove = getBestMove(&rootNode, 0, DEPTH);
+      //  printf("\nres: %d", minimax(&rootNode, 0, 3, 0));
+        printf("\n%d%d\n%d%d\n", bestMove.startX, bestMove.startY, bestMove.destX, bestMove.destY);
+        free(ps);
+      /*  for (int i = 0; i < rootNode.stlen; i++) {
             if (rootNode.children[i]->m.startX == 1) {
                 printf("\nX: %d Y; %d\n", rootNode.children[i]->score, rootNode.children[i]->m.destY);
             }
         }
-        struct Move bestMove = getBestMove(&rootNode, 0, DEPTH);
-        printf("\n%d%d\n%d%d\n", bestMove.startX, bestMove.startY, bestMove.destX, bestMove.destY);
 
-
-        free(ps);
+        */
     }
