@@ -1,4 +1,3 @@
-#define DEPTH 3
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
@@ -14,7 +13,7 @@
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
 int mValid(struct Move m, struct Piece* ps, const int player);
-
+int DEPTH;
 int wchecker(int i, struct Square* sqs, struct Piece* ps, struct Move m, int player, int opponent) {
     int p;
     for (int j = 0; j <= i; j++) {
@@ -739,7 +738,8 @@ int treeBuilder(struct State *rootNode, int player, int prune) {
         rootNode->children[i] = &states[i];
     }
     int evl = eval(rootNode->ps, player);
-    if (evl < 10000 || evl > 10000) {
+    if (evl < -10000 || evl > 10000) {
+        printf("\ncapture");
         rootNode->stlen = 0; /*if a king gets captured, kill the branch*/
     }
     return 0;
@@ -826,14 +826,13 @@ void cli() {
     printf("\n Welcome to C-Chess!\n");
     const char *chess_knight_art =
             "  |\\_\n"
-            " /  .\\_\n"
+            " /  X\\_\n"
             "|   ___)\n"
             "|    \\\n"
             "|  =  |\n"
             " /_____\\\n"
             "[_______]\n";
 
-    // Print the ASCII art
     printf("%s", chess_knight_art);
     char fen[256];
     printf("\nengine plays as white\n");
@@ -850,6 +849,25 @@ void cli() {
         rootNode.ps[i] = ps[i];
     }
     printf("\nbuilding tree...");
+    int pcount;
+    for (int i = 0; i < 32; i++) {
+        if (ps[i].captured == 0) {
+            pcount++;
+        }
+
+    }
+    if (pcount <= 32 && pcount > 10) {
+        DEPTH = 4; /*opening and midgame*/
+    }
+    else if (pcount <= 10 && pcount > 5) {
+        DEPTH = 5; /*lategame*/
+    }
+    else if (pcount < 4) {
+        DEPTH = 8;
+    }
+    else {
+        DEPTH = 6; /*endgame*/
+    }
     /*  for (int i = 0; i < 32; i++) {
           if (ps[i].captured == 0) {
               printf("\nX: %d, Y, %d, Type: %d, owner: %d, id: %d\n", ps[i].xpos, ps[i].ypos, ps[i].type, ps[i].owner, i);
@@ -861,8 +879,6 @@ void cli() {
             printf("\n MATE%d\n", ps[rootNode.children[8]->children[0]->m.pieceID].owner);
         }
     }
-    printf("\nmvalid: %d", mValid(rootNode.children[8]->children[0]->m, ps, 1));
-    printf(" %d/%d", rootNode.children[8]->children[0]->m.startX, rootNode.children[8]->children[0]->m.destX);
     printf("\ncalling minimax...");
     struct Move bestMove = getBestMove(&rootNode, 0, DEPTH);
     //  printf("\nres: %d", minimax(&rootNode, 0, 3, 0));
