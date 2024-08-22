@@ -6,18 +6,14 @@
 #include <math.h>
 #include "structs.h"
 /*init values for pieces in decipawns*/
-#define QUEEN 90
-#define ROOK 50
-#define PAWN 10
-#define KNIGHT 30
-#define BISHOP 32
-#define KING 0
+#define QUEEN 4
+#define ROOK 1
+#define PAWN 0
+#define KNIGHT 2
+#define BISHOP 3
+#define KING 5
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
-struct Square kqs[2]; /*keysquares (D & E 4 or D & E 5)*/
-struct Square iqs[2]; /*important squares (C & F 4 or C & F 5)*/
-
-
 int mValid(struct Move m, struct Piece* ps, const int player);
 
 int wchecker(int i, struct Square* sqs, struct Piece* ps, struct Move m, int player, int opponent) {
@@ -277,8 +273,10 @@ int kingValid(struct Move m, struct Piece* ps, int player, int opponent) {
     (m.destX == m.startX + 1 && m.destY == m.startY - 1) ||
     (m.destX == m.startX - 1 && m.destY == m.startY + 1) ||
     (m.destX == m.startX - 1 && m.destY == m.startY - 1)) {
-
-    for (int p = 0; p < 32; p++) {
+    if(m.destX == 3 && m.startX == 5) {
+        printf("\nstatus: %d", m.startX);
+    }
+        for (int p = 0; p < 32; p++) {
         if (ps[p].xpos == m.destX && ps[p].ypos == m.destY && ps[p].owner == player && ps[p].captured == 0) {
             return 0;
         }
@@ -286,12 +284,14 @@ int kingValid(struct Move m, struct Piece* ps, int player, int opponent) {
     }
     return 1;
 }
+int rookSet = 0; /*variable that tracks if a rook has been found*/
 if (m.startY == m.destY && ps[m.pieceID].moved == 0 && (ps[m.pieceID].ypos == 1 || ps[m.pieceID].ypos == 8)) {
     struct Piece rook;
     if (m.destX == m.startX + 2) {
         for (int p = 0; p < 32; p++) {
             if (ps[p].xpos == 8 && ps[p].ypos == ps[m.pieceID].ypos && ps[p].owner == player && ps[p].captured == 0) {
                 rook = ps[p];
+                rookSet = 1;
             }
         }
     }
@@ -299,8 +299,12 @@ if (m.startY == m.destY && ps[m.pieceID].moved == 0 && (ps[m.pieceID].ypos == 1 
         for (int p = 0; p < 32; p++) {
             if (ps[p].xpos == 1 && ps[p].ypos == ps[m.pieceID].ypos && ps[p].owner == player && ps[p].captured == 0) {
                 rook = ps[p];
+                rookSet = 1;
             }
         }
+    }
+    if (rookSet == 0) {
+        return 0; /*no rook has been found: invalid move*/
     }
     if (rook.moved == 1) {
         return 0;
@@ -851,9 +855,11 @@ void cli() {
         buildFullTree(&rootNode, 0, DEPTH);
         for (int i = 0; i < rootNode.stlen; i++) {
             if (rootNode.children[i]->m.destX == 5 && rootNode.children[i]->m.destY == 7 && ps[rootNode.children[i]->m.pieceID].type == 4) {
-                printf("\n MATE%d\n", i);
+                printf("\n MATE%d\n", ps[rootNode.children[8]->children[0]->m.pieceID].owner);
             }
         }
+        printf("\nmvalid: %d", mValid(rootNode.children[8]->children[0]->m, ps, 1));
+        printf(" %d/%d", rootNode.children[8]->children[0]->m.startX, rootNode.children[8]->children[0]->m.destX);
         printf("\ncalling minimax...");
         struct Move bestMove = getBestMove(&rootNode, 0, DEPTH);
       //  printf("\nres: %d", minimax(&rootNode, 0, 3, 0));
