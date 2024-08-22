@@ -4,6 +4,7 @@
 #include <string.h>
 #include <math.h>
 #include "structs.h"
+#include "piece-square-table.h"
 #define QUEEN 4
 #define ROOK 1
 #define PAWN 0
@@ -530,7 +531,7 @@ int getPieceValue(int type) {
         case BISHOP: return 300;    // 3 pawns = 300 centipawns
         case ROOK:   return 500;    // 5 pawns = 500 centipawns
         case QUEEN:  return 900;    // 9 pawns = 900 centipawns
-        case KING:   return 100000; // King is worth a very large number (e.g., 100,000 centipawns)
+        case KING:   return 100000;
         default:     return 0;
     }
 }
@@ -552,10 +553,36 @@ int materialCounter(struct Piece* ps, int player) {
 
 int eval(struct Piece* ps, int player) {
     int opponent = abs(player - 1); /*opponent gets declared (if player is 1, opponent is 0 and vice versa)*/
-
+    struct Move mv;
     int score; /*players score*/
+    struct Piece king;
+    for(int i = 0; i < 32; i++) {
+        if (ps[i].type == 5 && ps[i].owner == player) {
+            king = ps[i];
+        }
+    }
     score = materialCounter(ps, player);
-    return materialCounter(ps, player);
+    for (int i = 0; i < 32; i++) {
+        mv.pieceID = i;
+        mv.startX = ps[i].xpos;
+        mv.startY = ps[i].ypos;
+        for (int x = 1; x < 9; x++) {
+            for (int y = 1; y < 9; y++) {
+                mv.destX = x;
+                mv.destY = y;
+                if (mValid(mv, ps, player) == 1) {
+                    score = score + 1;
+                    if ((mv.destX == 4 || mv.destX == 5) && mv.destY == king.xpos + 4) {
+                        score = score + 50;
+                    }
+                }
+                if (mValid(mv, ps, opponent) == 1) {
+                    score = score - 1;
+                }
+            }
+        }
+    }
+    return score;
 
 
 }
@@ -622,17 +649,10 @@ struct Move* getMoves(struct Piece* ps, int player) {
 struct State* getstates(struct Piece* ps, const int pl, const int depth) { /*function for getting game "states" aka nodes of a specific position that will later be used in a tree for minimax*/
     const int player = pl;
 
-    int op;
-    if (player == 1) {
-        op = 0;
-    }
-    else if (player == 0) {
-        op = 1;
-    }
-    const int opponent = op;
 
-    struct State* states = (struct State*)calloc(218, sizeof(struct State));
+
     struct Move* pmvs = getMoves(ps, player);
+    struct State* states = (struct State*)calloc(pmvs[0].arlen, sizeof(struct State));
     for (int i = 0; i < pmvs[0].arlen; i++) {
         states[i].m = pmvs[i];
         //    memcpy(states[i].ps, ps, sizeof(*ps)); /*create a temporary instance of pieces for testing moves without affecting the main set*/
@@ -643,7 +663,6 @@ struct State* getstates(struct Piece* ps, const int pl, const int depth) { /*fun
         states[i].score = eval(states[i].ps, player);
 
     }
-
     return states;
 }
 
@@ -739,7 +758,6 @@ int treeBuilder(struct State *rootNode, int player, int prune) {
     }
     int evl = eval(rootNode->ps, player);
     if (evl < -10000 || evl > 10000) {
-        printf("\ncapture");
         rootNode->stlen = 0; /*if a king gets captured, kill the branch*/
     }
     return 0;
@@ -848,7 +866,7 @@ void cli() {
     for (int i = 0; i < 32; i++) {
         rootNode.ps[i] = ps[i];
     }
-    printf("\nbuilding tree...");
+
     int pcount;
     for (int i = 0; i < 32; i++) {
         if (ps[i].captured == 0) {
@@ -856,32 +874,22 @@ void cli() {
         }
 
     }
-    if (pcount <= 32 && pcount > 10) {
-        DEPTH = 4; /*opening and midgame*/
-    }
-    else if (pcount <= 10 && pcount > 5) {
-        DEPTH = 5; /*lategame*/
-    }
-    else if (pcount < 4) {
-        DEPTH = 8;
-    }
-    else {
-        DEPTH = 6; /*endgame*/
-    }
+    DEPTH = 4;
     /*  for (int i = 0; i < 32; i++) {
           if (ps[i].captured == 0) {
               printf("\nX: %d, Y, %d, Type: %d, owner: %d, id: %d\n", ps[i].xpos, ps[i].ypos, ps[i].type, ps[i].owner, i);
           }
       }*/
+    printf("\nbuilding tree with depth %d...", DEPTH);
     buildFullTree(&rootNode, 0, DEPTH);
     for (int i = 0; i < rootNode.stlen; i++) {
         if (rootNode.children[i]->m.destX == 5 && rootNode.children[i]->m.destY == 7 && ps[rootNode.children[i]->m.pieceID].type == 4) {
             printf("\n MATE%d\n", ps[rootNode.children[8]->children[0]->m.pieceID].owner);
         }
     }
-    printf("\ncalling minimax...");
+    printf("\ncalling minimax...\n");
+
     struct Move bestMove = getBestMove(&rootNode, 0, DEPTH);
-    //  printf("\nres: %d", minimax(&rootNode, 0, 3, 0));
     printf("\n%d%d\n%d%d\n", bestMove.startX, bestMove.startY, bestMove.destX, bestMove.destY);
     free(ps);
     /*  for (int i = 0; i < rootNode.stlen; i++) {
