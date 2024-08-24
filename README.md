@@ -23,4 +23,5 @@ the system the engine is running on should have at least 4 gb of ram available w
 # known issues
 1. the engine sees stalemates as checkmates.
 2. threefold repetition and en passant arent implemented.
-3. 
+let me know if you encounter any more issues via githubs issue feature or via email at contact@kuglatec.com
+
