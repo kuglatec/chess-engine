@@ -4,7 +4,6 @@
 #include <string.h>
 #include <math.h>
 #include "structs.h"
-#include "piece-square-table.h"
 #define QUEEN 4
 #define ROOK 1
 #define PAWN 0
