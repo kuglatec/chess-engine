@@ -16,3 +16,6 @@ tested with gcc on gentoo 6.9.10
 
 # dependencies
 no additional dependencies aside from gnulibc, math, ctype, string, and stdio are needed (it compiles on any modern GNU/linux system)
+
+# hardware requirements
+the system the engine is running on should have at least 4 gb of ram available when running on depth 4. increasing the depth above 4 is not recommended due to heavy ram usage (20gb+)
