@@ -2,7 +2,7 @@
 
 # features
 move generation and validation
-evaluation based on material, piece development and center control
+evaluation based on material, piece development and center control and
 evaluation based on minimax
 function for finding the best move in any position defined by a FEN string
 
