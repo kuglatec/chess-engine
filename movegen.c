@@ -540,6 +540,9 @@ int materialCounter(struct Piece* ps, int player) {
     for (int i = 0; i < 32; i++) {
         if (ps[i].owner == player && ps[i].captured == 0) {
             playerMaterial += getPieceValue(ps[i].type);
+            /*if ((ps[i].xpos == 4 || ps[i].xpos == 5) && ps[i].type == PAWN) {
+                playerMaterial += 30;
+            } */
         }
         else if (ps[i].owner != player && ps[i].captured == 0) {
             opponentMaterial += getPieceValue(ps[i].type);
@@ -554,32 +557,28 @@ int eval(struct Piece* ps, int player) {
     int opponent = abs(player - 1); /*opponent gets declared (if player is 1, opponent is 0 and vice versa)*/
     struct Move mv;
     int score; /*players score*/
-    struct Piece king;
-    for(int i = 0; i < 32; i++) {
-        if (ps[i].type == 5 && ps[i].owner == player) {
-            king = ps[i];
-        }
-    }
     score = materialCounter(ps, player);
+    struct Square center[4];
+    center[0].x = 4;
+    center[0].y = 4;
+    center[1].x = 5;
+    center[1].y = 4;
+    center[2].x = 4;
+    center[2].y = 5;
+    center[3].x = 5;
+    center[3].y = 5;
     for (int i = 0; i < 32; i++) {
+        struct Move mv;
         mv.pieceID = i;
         mv.startX = ps[i].xpos;
         mv.startY = ps[i].ypos;
-        for (int x = 1; x < 9; x++) {
-            for (int y = 1; y < 9; y++) {
-                mv.destX = x;
-                mv.destY = y;
-                if (mValid(mv, ps, player) == 1) {
-                    score = score + 1;
-                    if ((mv.destX == 4 || mv.destX == 5) && mv.destY == king.xpos + 4) {
-                        score = score + 50;
-                    }
-                }
-                if (mValid(mv, ps, opponent) == 1) {
-                    score = score - 1;
-                }
+        for (int m = 0; m < 4; m++) {
+            mv.destX = center[m].x;
+            mv.destY = center[m].y;
+            if (mValid(mv, ps, player)) {
+                score = score + 40;
             }
-        }
+        };
     }
     return score;
 
@@ -615,14 +614,26 @@ struct Piece* makeMove(struct Move mv, struct Piece* ps, int player) {
             }
         }
     }
+
+    if (ps[mv.pieceID].type == PAWN && mv.destY == 8) {
+        ps[mv.pieceID].type = QUEEN;
+    }
+
     return ps;
 }
 
 
 struct Move* getMoves(struct Piece* ps, int player) {
     struct Move mv;
-    struct Move* mvs = (struct Move*)calloc(218, sizeof(struct Move)); /*array of valid moves*/
-    int nom = 0; /*number of moves*/
+    int allocated_size = 218;
+    struct Move* mvs = (struct Move*)calloc(allocated_size, sizeof(struct Move));
+    if (mvs == NULL) {
+        printf("Initial calloc failed.\n");
+        return NULL;
+    }
+
+    int nom = 0;
+
     for (int p = 0; p < 32; p++) {
         for (int x = 1; x < 9; x++) {
             for (int y = 1; y < 9; y++) {
@@ -631,20 +642,30 @@ struct Move* getMoves(struct Piece* ps, int player) {
                 mv.destX = x;
                 mv.destY = y;
                 mv.pieceID = p;
-                //   printf("\n%d", mv.pieceID);
-                //printf("\nnom: %d\n", testmove(ps, mv, player));
-                if (mValid(mv, ps, player) == 1/* && testmove(ps, mv, player) > MIN_ADVANTAGE*/) {
+
+                if (mValid(mv, ps, player) == 1) {
+                    if (nom >= allocated_size) {
+                        allocated_size *= 2;
+                        struct Move* temp = realloc(mvs, allocated_size * sizeof(struct Move));
+                        if (temp == NULL) {
+                            printf("Realloc failed.\n");
+                            free(mvs);
+                            return NULL;
+                        }
+                        mvs = temp;
+                    }
                     mvs[nom] = mv;
                     nom++;
-                    //      printf("test");
-
                 }
-                mvs[0].arlen = nom;
             }
         }
     }
+
+    mvs[0].arlen = nom;
+
     return mvs;
 }
+
 struct State* getstates(struct Piece* ps, const int pl, const int depth) { /*function for getting game "states" aka nodes of a specific position that will later be used in a tree for minimax*/
     const int player = pl;
 
@@ -812,7 +833,7 @@ struct Move getBestMove(struct State* rootNode, int pl, int depth) {
 }
 
 
-int buildFullTree(struct State *rootNode, const int pl, int depth) {
+int buildFullTree(struct State *rootNode, const int pl, int depth, int prune_depth, int prune_score) {
     int op = 0;
 
     if (pl == 0) {
@@ -829,7 +850,7 @@ int buildFullTree(struct State *rootNode, const int pl, int depth) {
         depth--;
         for (int node = 0; node < rootNode->stlen; node++) {
             //   treeBuilder(rootNode->children[node], opponent);
-            buildFullTree(rootNode->children[node], opponent, depth); /*recursively call this function to continue building new branches*/
+            buildFullTree(rootNode->children[node], opponent, depth, prune_depth, prune_score); /*recursively call this function to continue building new branches*/
 
         }
 
@@ -874,13 +895,32 @@ void cli() {
 
     }
     DEPTH = 4;
+    int mc = 0;
+    for (int i = 0; i < 32; i++) {
+        for (int x = 1; x < 9; x++) {
+            for (int y = 1; y < 9; y++) {
+                struct Move mv;
+                mv.pieceID = i;
+                mv.startX = ps[mv.pieceID].xpos;
+                mv.startY = ps[mv.pieceID].ypos;
+                mv.destY = x;
+                mv.destX = y;
+                if (mValid(mv, ps, 0)) {
+                    mc++;
+                }
+            }
+        }
+    }
+    if (mc < 25) { // if there are less than 25 possible moves, increase the depth
+        DEPTH++;
+    }
     /*  for (int i = 0; i < 32; i++) {
           if (ps[i].captured == 0) {
               printf("\nX: %d, Y, %d, Type: %d, owner: %d, id: %d\n", ps[i].xpos, ps[i].ypos, ps[i].type, ps[i].owner, i);
           }
       }*/
     printf("\nbuilding tree with depth %d...", DEPTH);
-    buildFullTree(&rootNode, 0, DEPTH);
+    buildFullTree(&rootNode, 0, DEPTH, 3, 2);
     for (int i = 0; i < rootNode.stlen; i++) {
         if (rootNode.children[i]->m.destX == 5 && rootNode.children[i]->m.destY == 7 && ps[rootNode.children[i]->m.pieceID].type == 4) {
             printf("\n MATE%d\n", ps[rootNode.children[8]->children[0]->m.pieceID].owner);
